@@ -1,0 +1,37 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Personal Data & Master Resume (NEVER committed to git)
+master_resume.md
+master_resume.txt
+job_ledger.json
+resumes/
+*.pdf
+*.tex
+*.aux
+*.log
+*.out
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables & secrets
+.env
+.env.local
+*.secret
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo

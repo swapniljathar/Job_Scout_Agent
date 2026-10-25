@@ -1,0 +1,143 @@
+from datetime import datetime, timedelta
+
+def get_sample_jobs(count=60):
+    today = datetime.now()
+    
+    companies_and_roles = [
+        # Pune Tech & Enterprise Centers
+        ("Associate Product Manager - Generative AI", "NewRocket Technologies", "Pune, Maharashtra, India", "Associate",
+         "Lead client-facing AI and LLM workflows. Partner with engineering to design agentic pipelines, author PRDs, and optimize user experience for enterprise automation products. Skills: Product Strategy, Agile, LLMs, Python, RAG."),
+        ("Product Manager — AI Systems & Automation", "NielsenIQ", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Lead product roadmaps for intelligent data analytics platforms using machine learning and NLP. Drive PRD creation, Agile/Scrum delivery, data analysis with SQL/Python, and cross-functional team leadership."),
+        ("AI Product Specialist / APM", "Zensar Technologies", "Pune, Maharashtra, India", "Associate",
+         "Work directly with enterprise clients to translate business requirements into AI agent specifications. Lead backlog grooming, sprint planning, and user acceptance testing (UAT)."),
+        ("Technical Product Manager — Platform & APIs", "Persistent Systems", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Drive core developer platform and public APIs. Experience with RESTful architectures, cloud infrastructure, Python, and microservices product lifecycles."),
+        ("Product Manager - AI Decision Systems", "Barclays Technology Centre", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Define feature roadmap for real-time fraud detection and risk analytics models using AI/ML. Author technical PRDs, collaborate with compliance and engineering leads."),
+        ("Associate Product Manager - WealthTech AI", "BNY Mellon", "Pune, Maharashtra, India", "Associate",
+         "Drive digital transformation for asset servicing. Leverage generative AI to summarize financial prospectuses and automate document validation."),
+        ("Product Manager - AdTech Machine Learning", "PubMatic", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Optimize real-time bidding algorithms and programmatic advertising yield engines. Define algorithmic KPIs and partner with data scientists on ML feature stores."),
+        ("Technical Product Manager - Cloud Management", "BMC Software", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Oversee IT service management automation powered by conversational AI agents and LLMs. Prioritize sprint backlogs and drive developer customer research."),
+        ("Product Owner - Healthcare AI", "Cybage Software", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Manage scrum sprints and user stories for HIPAA-compliant clinical decision support tools using medical NLP and computer vision."),
+        ("Product Manager - Enterprise Data Protection", "Veritas Technologies", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Own the vision and execution for autonomous backup anomaly detection using machine learning on petabyte-scale hybrid cloud environments."),
+        ("Associate Product Manager - IoT & AI Systems", "Eaton India Innovation Center", "Pune, Maharashtra, India", "Associate",
+         "Bridge edge-computing hardware with cloud AI models for predictive electrical failure. Run customer interviews and define minimum viable products (MVPs)."),
+        ("Product Specialist - Generative AI Tools", "Cyient", "Pune, Maharashtra, India", "Associate",
+         "Facilitate internal rollout of generative AI developer copilots and prompt engineering libraries. Track developer productivity metrics and run internal training."),
+        ("Product Manager - Conversational AI", "Siemens Technology", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Ship industrial chatbots and voice-guided maintenance tools for factory floor technicians using speech-to-text and LLM agents."),
+        ("Associate Product Manager - Payments Core", "Mastercard Tech Hub", "Pune, Maharashtra, India", "Associate",
+         "Manage cross-border payment rails and automated dispute resolution workflows. Partner with fraud operations and UX researchers on payment checkout flow."),
+        ("Technical Product Manager - Security Analytics", "Deutsche Bank Pune", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Spearhead AI-powered vulnerability detection pipelines and automated audit log triage. Write user acceptance criteria and monitor SLA benchmarks."),
+        ("Product Manager - Digital Banking", "HSBC Software Development", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Drive mobile banking customer onboarding journeys using biometric authentication and automated KYC document verification."),
+        ("Associate Product Manager - Global Remittance", "Western Union Digital", "Pune, Maharashtra, India", "Associate",
+         "Optimize consumer remittance conversion funnels across 50+ countries. Run A/B tests on exchange rate alerts and fee transparency."),
+        ("Product Manager - Connected Care Systems", "Philips Innovation Campus", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Lead telemetry and patient monitoring software integrations. Prioritize medical device firmware and cloud dashboard enhancements."),
+        ("Product Owner - Logistics & Fleet Telematics", "KPIT Technologies", "Pune, Maharashtra, India", "Mid-Senior level",
+         "Build real-time route optimization and fuel efficiency models for commercial fleets using sensor telemetry and GIS mapping."),
+        ("Associate Product Manager - Customer Experience AI", "Wipro Digital", "Pune, Maharashtra, India", "Associate",
+         "Design omnichannel customer service agent dashboards featuring automated sentiment analysis and smart reply suggestions."),
+
+        # Indian Unicorns & High-Growth Tech (Pune / Bangalore / Remote)
+        ("Product Manager - Search & Recommendations", "Flipkart", "Bangalore / Pune (Hybrid)", "Mid-Senior level",
+         "Own search relevance ranking and multimodal product discovery powered by deep learning and vector embeddings. Increase GMV conversion."),
+        ("Associate Product Manager - Delivery Experience", "Swiggy", "Bangalore / Remote", "Associate",
+         "Optimize 10-minute grocery delivery dispatch algorithms and customer tracking UX. Collaborate with operations and dispatch engineering."),
+        ("Product Manager - Growth & Retention", "Zomato", "Gurgaon / Remote", "Mid-Senior level",
+         "Drive restaurant partner loyalty programs and dynamic discount pricing experiments. Measure customer lifetime value (LTV) and churn."),
+        ("Product Manager - Merchant Onboarding AI", "Razorpay", "Bangalore / Remote", "Mid-Senior level",
+         "Automate merchant underwriting and instant risk scoring using computer vision for GST and PAN document verification."),
+        ("Associate Product Manager - UPI & Wealth", "PhonePe", "Bangalore / Pune", "Associate",
+         "Ship micro-investment products and recurring auto-pay setups. Design simple, intuitive mobile screens for first-time financial users."),
+        ("Product Manager - AI Platform & Agents", "Jio Platforms", "Mumbai / Pune", "Mid-Senior level",
+         "Build national-scale multilingual LLM infrastructure and AI agent services for telecom, streaming, and retail applications."),
+        ("Associate Product Manager - Consumer Growth", "CRED", "Bangalore / Remote", "Associate",
+         "Craft gamified user journeys, reward drop mechanisms, and high-engagement credit card bill payment incentives."),
+        ("Product Manager - Multimodal Ads", "InMobi", "Bangalore / Remote", "Mid-Senior level",
+         "Deploy interactive video ads and real-time banner generation using generative diffusion models and programmatic bidding."),
+        ("Technical Product Manager - API Ecosystem", "Postman", "Bangalore / Remote", "Mid-Senior level",
+         "Empower 30M+ developers with automated API documentation, mock servers, and generative AI test suite generation."),
+        ("Associate Product Manager - Supply Chain Intelligence", "Zepto", "Mumbai / Pune", "Associate",
+         "Minimize warehouse picking times and forecast hyper-local inventory demand across dark stores using machine learning."),
+        ("Product Manager - Seller Tools & Cataloging", "Meesho", "Bangalore / Remote", "Mid-Senior level",
+         "Enable small manufacturers to digitize product catalogs instantly with automatic image background removal and AI title generation."),
+        ("Product Manager - B2B Lending & Risk", "Pine Labs", "Noida / Pune", "Mid-Senior level",
+         "Architect POS merchant cash advance products and automatic revenue-based repayment schedules."),
+        ("Associate Product Manager - Gaming & Metaverse", "Dream11", "Mumbai / Remote", "Associate",
+         "Build fantasy sports live contest matchmaking engines and real-time social leaderboards handling millions of concurrent users."),
+        ("Product Manager - InsurTech Automation", "Policybazaar", "Gurgaon / Remote", "Mid-Senior level",
+         "Streamline health and term insurance policy comparisons with intelligent quote recommenders and instant claim tracking."),
+        ("Associate Product Manager - EdTech AI Tutor", "PhysicsWallah", "Noida / Remote", "Associate",
+         "Design personalized student revision schedules and automated question-answering bots supporting vernacular regional languages."),
+
+        # Global Big Tech & SaaS Leaders (India Tech Centers)
+        ("Product Manager II - Enterprise Copilot", "Microsoft India", "Hyderabad / Bangalore / Pune", "Mid-Senior level",
+         "Design enterprise knowledge retrieval and semantic search over corporate SharePoint and Teams repositories using GPT-4 / Azure OpenAI."),
+        ("Associate Product Manager - Google Workspace AI", "Google India", "Bangalore / Hyderabad", "Associate",
+         "Build smart compose, document summarization, and spreadsheet automation features for billions of Google Workspace users."),
+        ("Product Manager - AWS SageMaker Tools", "Amazon Web Services", "Bangalore / Pune", "Mid-Senior level",
+         "Streamline MLOps workflows, model fine-tuning dashboards, and distributed GPU training orchestration for enterprise AI builders."),
+        ("Technical Product Manager - Network Telemetry AI", "Cisco Systems", "Bangalore / Pune", "Mid-Senior level",
+         "Deliver predictive network outage alerts and self-healing SD-WAN policies using telemetry time-series anomaly detection."),
+        ("Product Manager - Workflow Intelligence", "ServiceNow", "Hyderabad / Pune", "Mid-Senior level",
+         "Build GenAI automation skills for IT service management and HR case resolution using domain-specific generative models."),
+        ("Product Manager - Einstein 1 AI Platform", "Salesforce India", "Bangalore / Hyderabad", "Mid-Senior level",
+         "Design prompt builders, autonomous agent actions, and zero-copy data cloud integrations for global CRM users."),
+        ("Product Manager - AI Workbench & NeMo", "NVIDIA India", "Pune / Bangalore", "Mid-Senior level",
+         "Drive developer tooling for LLM alignment, quantization, and GPU container acceleration on NVIDIA hardware."),
+        ("Associate Product Manager - Firefly Generative AI", "Adobe India", "Noida / Bangalore", "Associate",
+         "Integrate generative vector graphics and text-to-image editing directly into Creative Cloud applications (Photoshop, Illustrator)."),
+        ("Product Manager - Driver Pricing & Dispatch", "Uber India Tech", "Bangalore / Hyderabad", "Mid-Senior level",
+         "Optimize surge pricing equilibrium and driver allocation models across 500+ global cities using reinforcement learning."),
+        ("Product Manager - Jira AI Assistance", "Atlassian", "Bangalore / Remote", "Mid-Senior level",
+         "Empower agile engineering teams with automated issue breakdown, PRD-to-ticket conversion, and sprint risk forecasting."),
+        ("Technical Product Manager - Autonomous Database", "Oracle India", "Bangalore / Pune", "Mid-Senior level",
+         "Deliver natural language SQL query interfaces and automated database index tuning powered by machine learning."),
+        ("Product Manager - Enterprise ERP AI", "SAP Labs India", "Bangalore / Pune", "Mid-Senior level",
+         "Lead the roadmap for Joule AI copilot across finance, procurement, and supply chain ERP modules."),
+        ("Associate Product Manager - Small Business Cloud", "Intuit India", "Bangalore / Remote", "Associate",
+         "Automate QuickBooks receipt categorization and cash flow forecasting for small businesses using financial AI."),
+        ("Product Manager - Virtualization Telemetry", "VMware by Broadcom", "Pune / Bangalore", "Mid-Senior level",
+         "Architect cloud management dashboards for hybrid cloud workload placement and energy consumption optimization."),
+        ("Technical Product Manager - Hardware AI Telemetry", "Intel India", "Bangalore / Pune", "Mid-Senior level",
+         "Define firmware diagnostics and edge AI inference benchmarks across next-gen NPU and processor architectures."),
+        ("Product Manager - Cloud Security Posture", "Palo Alto Networks", "Bangalore / Remote", "Mid-Senior level",
+         "Own cloud asset discovery, automated threat surface reduction, and container security compliance dashboards."),
+        ("Associate Product Manager - Observability AI", "Dynatrace", "Pune / Remote", "Associate",
+         "Build root-cause analysis engines that correlate trillions of distributed traces and metrics to surface software incidents instantly."),
+        ("Product Manager - Conversational Commerce", "Gupshup", "Mumbai / Pune", "Mid-Senior level",
+         "Design WhatsApp and RCS marketing automation tools powered by LLM agent workflows and catalog checkout bots."),
+        ("Product Manager - Voice AI & Speech Synthesis", "Murf AI", "Bangalore / Remote", "Mid-Senior level",
+         "Direct research and productization of ultra-realistic text-to-speech voice models and multi-track audio editing timelines."),
+        ("Associate Product Manager - AI Meeting Summaries", "Fireflies.ai", "Remote India", "Associate",
+         "Build automatic meeting transcription, action item extraction, and CRM auto-population integrations.")
+    ]
+
+    jobs = []
+    for i, (title, comp, loc, level, desc) in enumerate(companies_and_roles[:count], 1):
+        # 3-Day Freshness Window: 0 to 2 days ago (strictly within last 72 hours)
+        days_ago = (i - 1) % 3
+        hours_ago = (i * 3) % 24
+        posted_date = (today - timedelta(days=days_ago, hours=hours_ago)).strftime("%Y-%m-%d")
+        safe_name = comp.lower().replace(" ", "-").replace("(", "").replace(")", "")
+        
+        jobs.append({
+            "title": title,
+            "company": comp,
+            "location": loc,
+            "postedAt": posted_date,
+            "jobLink": f"https://www.linkedin.com/jobs/view/{safe_name}-{1000000 + i}",
+            "employmentType": "Full-time",
+            "seniorityLevel": level,
+            "jobDescription": desc
+        })
+
+    return jobs

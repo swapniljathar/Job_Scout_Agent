@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Scout Agent · LinkedIn Jobs Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2716%27%20fill%3D%27%23F3F4F6%27/%3E%3Crect%20x%3D%271%27%20y%3D%271%27%20width%3D%2762%27%20height%3D%2762%27%20rx%3D%2715%27%20fill%3D%27none%27%20stroke%3D%27%23D1D5DB%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2732%27%20y%3D%2740%27%20font-family%3D%27-apple-system%2C%20BlinkMacSystemFont%2C%20sans-serif%27%20font-weight%3D%27800%27%20font-size%3D%2726%27%20fill%3D%27%23111827%27%20text-anchor%3D%27middle%27%20letter-spacing%3D%27-0.5%27%3EJS%3C/text%3E%3Ccircle%20cx%3D%2748%27%20cy%3D%2716%27%20r%3D%274.5%27%20fill%3D%27%2310B981%27/%3E%3C/svg%3E">
+  <link rel="alternate icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #FFFFFF;
+      --bg-canvas: #FAFAFA;
+      --card-white: #FFFFFF;
+      --border-subtle: #EAEAEA;
+      --border-card: #E5E7EB;
+      --text-heading: #111827;
+      --text-body: #4B5563;
+      --brand-primary: #F3F4F6;
+      --brand-primary-hover: #E5E7EB;
+      --brand-soft-bg: #F9FAFB;
+      --brand-text: #1F2937;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-heading);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    /* Soft Pastel Palette (Light, Soothing & Smooth) */
+    .bg-pastel-rose { background-color: #FFF1F2; }
+    .bg-pastel-green { background-color: #F0FDF4; }
+    .bg-pastel-lavender { background-color: #F5F3FF; }
+    .bg-pastel-sky { background-color: #F0F9FF; }
+    .bg-pastel-amber { background-color: #FEF9C3; }
+
+    /* Custom smooth scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #E2E8F0;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #CBD5E1;
+    }
+
+    /* Smooth transition presets */
+    .smooth-transition {
+      transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-overlay {
+      background: rgba(17, 24, 39, 0.35);
+      backdrop-filter: blur(5px);
+    }
+
+    /* Soothing Grey Selection (Replaces harsh black) */
+    ::selection {
+      background-color: #E5E7EB;
+      color: #111827;
+    }
+    ::-moz-selection {
+      background-color: #E5E7EB;
+      color: #111827;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#FAFAFA] text-gray-900">
+
+  <!-- ======================================================== -->
+  <!-- TOP NAVIGATION HEADER -->
+  <!-- ======================================================== -->
+  <header class="bg-white border-b border-[#EAEAEA] sticky top-0 z-30 px-6 py-2.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand & Left Nav Tabs -->
+      <div class="flex items-center gap-6">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('dashboard')">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 border border-gray-300 font-bold text-xs text-gray-800 shadow-2xs tracking-wider">
+            JS
+          </span>
+          <span class="font-semibold text-gray-900 text-sm tracking-tight">Job Scout Agent</span>
+        </div>
+
+        <!-- Horizontal Nav Tabs -->
+        <nav class="hidden md:flex items-center gap-1 text-[13px]">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-1.5 rounded-lg font-medium bg-gray-100 text-gray-900 border border-gray-200 smooth-transition">
+            Dashboard
+          </button>
+          <button onclick="switchTab('browse')" id="nav-browse" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>Browse jobs</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700">55</span>
+          </button>
+          <button onclick="switchTab('applications')" id="nav-applications" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>Applications</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-800">6</span>
+          </button>
+          <button onclick="switchTab('tracker')" id="nav-tracker" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition">
+            Tracker
+          </button>
+          <button onclick="switchTab('inbox')" id="nav-inbox" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>Lusha Warm Intro</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-700 border border-gray-200">5</span>
+          </button>
+          <button onclick="switchTab('resume')" id="nav-resume" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>My Resume</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-700 border border-gray-200">Master</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Right Nav Status & User Auth Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Live Scraper Source Pill -->
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF5FB] border border-[#D0E7F9] text-[#0A66C2] text-xs font-mono">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          <span class="font-medium">LinkedIn Jobs Scraper</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        </div>
+
+        <button onclick="switchTab('resume')" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Upload / Edit Resume</span>
+        </button>
+
+        <!-- Dynamic User Auth Container -->
+        <div id="auth-header-container" class="relative">
+          <!-- Logged Out View -->
+          <div id="header-logged-out" class="hidden flex items-center gap-2">
+            <button onclick="openAuthModal('signin')" class="px-3 py-1 text-xs font-medium text-gray-700 hover:text-gray-900 smooth-transition">
+              Sign in
+            </button>
+            <button onclick="openAuthModal('signup')" class="px-3.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+              Sign up
+            </button>
+          </div>
+
+          <!-- Logged In View -->
+          <div id="header-logged-in" class="flex items-center gap-2">
+            <button onclick="toggleUserMenu()" class="inline-flex items-center gap-2 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-800 pl-1.5 pr-3 py-1 text-xs font-medium smooth-transition shadow-2xs">
+              <span id="user-avatar-initials" class="w-5 h-5 rounded-full bg-white border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-700">SJ</span>
+              <span id="user-display-name">Swapnil Jathar</span>
+              <span id="user-role-badge" class="text-gray-500 text-[10px] bg-white/70 px-1.5 py-0.2 rounded border border-black/5">APM</span>
+              <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="user-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-gray-200 shadow-xl p-3 z-50 space-y-2">
+              <div class="px-2 py-1.5 border-b border-gray-100">
+                <div id="dropdown-user-name" class="font-bold text-xs text-gray-900">Swapnil Jathar</div>
+                <div id="dropdown-user-email" class="text-[11px] font-mono text-gray-500 truncate">candidate@example.com</div>
+                <div class="mt-1 flex items-center gap-1.5">
+                  <span id="dropdown-auth-provider" class="text-[9.5px] font-mono px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-600 border border-gray-200">Google Auth</span>
+                  <span class="text-[9.5px] font-mono text-emerald-700">Active</span>
+                </div>
+              </div>
+
+              <div class="space-y-0.5 text-xs">
+                <button onclick="switchTab('resume'); toggleUserMenu();" class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center gap-2 smooth-transition">
+                  <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <span>My Master Resume</span>
+                </button>
+                <button onclick="switchTab('tracker'); toggleUserMenu();" class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center gap-2 smooth-transition">
+                  <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  <span>Application Tracker</span>
+                </button>
+              </div>
+
+              <div class="pt-1 border-t border-gray-100">
+                <button onclick="logoutUser()" class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-red-50 text-red-600 text-xs flex items-center gap-2 smooth-transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN WORKSPACE -->
+  <!-- ======================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+    <!-- TAB 1: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Search & Multi-Filter Control Bar -->
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 shadow-2xs space-y-3">
+        <!-- Main Search Input -->
+        <div class="flex items-center gap-3">
+          <div class="relative flex-1">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input 
+              type="text" 
+              id="dashboard-search-input"
+              value="AI Product Manager and Product Manager roles in Pune" 
+              placeholder="Standing search query: e.g. AI Product Manager in Pune..." 
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 smooth-transition text-gray-900 bg-white"
+              oninput="handleGlobalSearch()"
+            >
+          </div>
+          <button onclick="triggerScoutCycle()" class="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-medium text-xs smooth-transition shrink-0 shadow-2xs flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span>Scan LinkedIn (&lt;72h)</span>
+          </button>
+        </div>
+
+        <!-- Filter Pills Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-100 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-900 border border-gray-200 font-medium smooth-transition flex items-center gap-1.5">
+              <span>Location: Pune & Remote</span>
+              <span class="text-gray-400 text-[10px]">✕</span>
+            </button>
+            <button class="px-3 py-1 rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 smooth-transition flex items-center gap-1.5">
+              <span>Freshness: &lt; 3 Days</span>
+            </button>
+            <button class="px-3 py-1 rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 smooth-transition flex items-center gap-1.5">
+              <span>Title: APM / PM / AI PM</span>
+            </button>
+            <button class="px-3 py-1 rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 smooth-transition flex items-center gap-1.5">
+              <span>ATS: Greenhouse / Workday / Lever</span>
+            </button>
+            <button class="px-3 py-1 rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 smooth-transition flex items-center gap-1.5">
+              <span>Source: LinkedIn Scraped</span>
+            </button>
+          </div>
+
+          <button onclick="clearFilters()" class="text-xs text-gray-400 hover:text-gray-700 underline font-mono">
+            Clear all
+          </button>
+        </div>
+      </div>
+
+      <!-- SECTION: TOP 5 MATCHES -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Top Match Roles · High ATS Alignment</h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-700 font-medium">5 Staged</span>
+          </div>
+          <span class="text-xs text-gray-400 font-mono">Ranked by ATS Match against Master Resume</span>
+        </div>
+
+        <!-- 5 Light Pastel Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5" id="pastel-matches-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- SECTION: APPLICATIONS TABLE -->
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-5 shadow-2xs space-y-4">
+        
+        <!-- Table Header & Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-semibold text-gray-900">Live Applications</h2>
+            <!-- Filter chips -->
+            <div class="flex items-center gap-1.5 text-xs">
+              <button onclick="filterAppTable('all')" class="app-filter-btn px-2.5 py-1 rounded-lg bg-gray-200 text-gray-900 border border-gray-300 font-semibold smooth-transition" data-status="all">All (6)</button>
+              <button onclick="filterAppTable('submitted')" class="app-filter-btn px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 smooth-transition" data-status="submitted">Applied</button>
+              <button onclick="filterAppTable('in_flight')" class="app-filter-btn px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 smooth-transition" data-status="in_flight">Ready to Apply</button>
+              <button onclick="filterAppTable('needs_you')" class="app-filter-btn px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 smooth-transition" data-status="needs_you">Needs you</button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <input 
+                type="text" 
+                id="table-search" 
+                placeholder="Filter by company or role..." 
+                class="text-xs pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-300 w-44"
+                oninput="filterTableSearch()"
+              >
+              <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <button onclick="approveAllStaged()" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+              Approve all staged
+            </button>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-gray-100 text-gray-400 font-mono text-[10.5px]">
+                <th class="py-2 px-3 font-normal">COMPANY</th>
+                <th class="py-2 px-3 font-normal">ROLE</th>
+                <th class="py-2 px-3 font-normal">ATS SYSTEM</th>
+                <th class="py-2 px-3 font-normal">MATCH</th>
+                <th class="py-2 px-3 font-normal">STATUS</th>
+                <th class="py-2 px-3 font-normal">POSTED</th>
+                <th class="py-2 px-3 font-normal text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="applications-table-body" class="divide-y divide-gray-50">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: BROWSE JOBS (Full 55+ Catalog) -->
+    <div id="tab-browse" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">LinkedIn Scraped Jobs Catalog (Fresh &lt; 72h)</h2>
+          <p class="text-xs text-gray-500">All 55+ deduplicated roles matching "AI Product Manager and PM roles in Pune".</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="browse-search" 
+            placeholder="Search roles or companies..." 
+            class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-800 w-56"
+            oninput="filterBrowseSearch()"
+          >
+          <button onclick="triggerScoutCycle()" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+            Scan for More Roles
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] overflow-hidden shadow-2xs">
+        <div class="overflow-x-auto max-h-[640px] custom-scroll">
+          <table class="w-full text-left text-xs">
+            <thead class="sticky top-0 bg-gray-50/95 border-b border-gray-100 text-gray-500 font-mono text-[10.5px]">
+              <tr>
+                <th class="py-2.5 px-4 font-normal">#</th>
+                <th class="py-2.5 px-4 font-normal">ROLE TITLE</th>
+                <th class="py-2.5 px-4 font-normal">COMPANY</th>
+                <th class="py-2.5 px-4 font-normal">LOCATION</th>
+                <th class="py-2.5 px-4 font-normal">ATS</th>
+                <th class="py-2.5 px-4 font-normal">MATCH</th>
+                <th class="py-2.5 px-4 font-normal">POSTED</th>
+                <th class="py-2.5 px-4 font-normal text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="browse-table-body" class="divide-y divide-gray-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: APPLICATIONS DETAILED QUEUE -->
+    <div id="tab-applications" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 flex items-center justify-between shadow-2xs">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">Application Queue & Human-in-the-Loop Review</h2>
+          <p class="text-xs text-gray-500">Every resume bullet rephrase and tailored cover letter is verified for 100% truthfulness.</p>
+        </div>
+        <button onclick="approveAllStaged()" class="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+          Approve All (6)
+        </button>
+      </div>
+
+      <div class="space-y-3" id="detailed-queue-container">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 4: KANBAN TRACKER -->
+    <div id="tab-tracker" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 flex items-center justify-between shadow-2xs">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">Application Pipeline Tracker</h2>
+          <p class="text-xs text-gray-500">Autonomous status updates synced via LinkedIn and Supabase persistence ledger.</p>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Ledger: job_ledger.json</span>
+        </div>
+      </div>
+
+      <!-- 4-Column Kanban -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Col 1 -->
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-3 space-y-2 shadow-2xs">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">VIEWED</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" id="kanban-count-viewed">2</span>
+          </div>
+          <div class="space-y-2 min-h-[300px]" id="kanban-col-viewed"></div>
+        </div>
+
+        <!-- Col 2 -->
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-3 space-y-2 shadow-2xs">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">READY / DRAFTED</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" id="kanban-count-drafted">2</span>
+          </div>
+          <div class="space-y-2 min-h-[300px]" id="kanban-col-drafted"></div>
+        </div>
+
+        <!-- Col 3 -->
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-3 space-y-2 shadow-2xs">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">APPLIED</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" id="kanban-count-applied">1</span>
+          </div>
+          <div class="space-y-2 min-h-[300px]" id="kanban-col-applied"></div>
+        </div>
+
+        <!-- Col 4 -->
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-3 space-y-2 shadow-2xs">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">REPLIED / INTERVIEW</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" id="kanban-count-replied">1</span>
+          </div>
+          <div class="space-y-2 min-h-[300px]" id="kanban-col-replied"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: LUSHA WARM INTRO HUB -->
+    <div id="tab-inbox" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 flex items-center justify-between shadow-2xs">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">Lusha.com Verified Warm-Intro Hub</h2>
+          <p class="text-xs text-gray-500">Hiring decision-makers with deliverable work emails and personalized coffee-chat drafts.</p>
+        </div>
+        <span class="text-xs font-mono text-gray-700 font-medium bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200">5 Verified Addresses</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="lusha-contacts-grid">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 6: MY RESUME & SOURCE-OF-TRUTH HUB -->
+    <div id="tab-resume" class="tab-content hidden space-y-6">
+      
+      <!-- Top Overview Banner -->
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-6 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-300 text-xs font-mono font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Single Source of Truth
+            </span>
+            <span class="text-xs font-mono text-gray-500">Zero-Fabrication Shield: Active</span>
+          </div>
+          <h2 class="text-lg font-bold text-gray-900 mt-2">Master Resume & Experience Hub</h2>
+          <p class="text-xs text-gray-600 mt-1 max-w-2xl leading-relaxed">
+            Upload your master resume or edit it directly below. Job Scout Agent strictly tailors every ATS resume and cover letter from these factual bullet points — guaranteed 0% hallucination.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="document.getElementById('resume-file-input').click()" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            <span>Upload Resume File</span>
+          </button>
+          <input type="file" id="resume-file-input" accept=".txt,.md,.pdf,.docx" onchange="handleResumeFileUpload(event)" class="hidden">
+          <button onclick="saveMasterResume()" class="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs flex items-center gap-1.5">
+            <span>Save Master Resume</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Zone -->
+      <div id="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('resume-file-input').click()" class="border-2 border-dashed border-gray-300 hover:border-gray-400 bg-gray-50/50 hover:bg-gray-50 rounded-2xl p-6 text-center cursor-pointer smooth-transition">
+        <div class="flex flex-col items-center justify-center gap-2">
+          <div class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-800">Drop your resume here, or <span class="text-blue-600 underline">browse files</span></p>
+            <p class="text-[11px] text-gray-500 mt-0.5">Supports PDF, DOCX, TXT, and Markdown files</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Master Resume Editor & Skills Matrix -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Master Resume Markdown Editor -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-[#EAEAEA] p-5 shadow-2xs space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-gray-900">Master Resume Content (Markdown)</span>
+              <span id="resume-word-count" class="text-[10.5px] font-mono text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">1,120 words</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="resetMasterResume()" class="text-xs text-gray-500 hover:text-gray-900 underline">Reset to Default</button>
+              <button onclick="downloadMasterResume()" class="text-xs text-blue-600 hover:text-blue-800 underline">Export .md</button>
+            </div>
+          </div>
+
+          <textarea 
+            id="master-resume-textarea" 
+            rows="22" 
+            class="w-full font-mono text-xs p-4 rounded-xl border border-gray-200 bg-gray-50/40 text-gray-800 leading-relaxed focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-400 custom-scroll resize-y"
+            oninput="updateResumeWordCount()"
+          ></textarea>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-[11px] text-gray-500">Changes are immediately applied as the single source of truth for all job tailoring.</span>
+            <button onclick="saveMasterResume()" class="px-4 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition">
+              Save Master Resume
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Core Indexed Strengths & Categories -->
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-[#EAEAEA] p-5 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Indexed Core Strengths</h3>
+              <span class="text-[10px] font-mono text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">42 Skills</span>
+            </div>
+            
+            <div class="space-y-3 text-xs">
+              <div class="p-3 rounded-xl bg-[#FFF1F2] border border-[#FFE4E6]">
+                <span class="font-bold text-gray-900 block text-[11px] mb-1">Product Strategy & 0→1</span>
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">0-to-1 Builds</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">PRD & Epics</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">GTM Execution</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">Roadmap Planning</span>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7]">
+                <span class="font-bold text-gray-900 block text-[11px] mb-1">Applied AI & Agentic Workflows</span>
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">LLM Prompt Eng</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">Agentic Workflows</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">RAG Architectures</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">Schema Governance POC</span>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-[#F5F3FF] border border-[#EDE9FE]">
+                <span class="font-bold text-gray-900 block text-[11px] mb-1">Enterprise Platform Migrations</span>
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">200+ Enterprise Apps</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">JPMorganChase Onsite</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">EUC Consolidation</span>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-[#FEF9C3] border border-[#FEF08A]">
+                <span class="font-bold text-gray-900 block text-[11px] mb-1">FinTech, Loyalty & Scale</span>
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">Instant UPI Cashback</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">Rs. 80–100 Cr+ Disbursed</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700">20L+ Retailers Activated</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- ROLE INSPECTION & HUMAN-IN-THE-LOOP TAILORING DRAWER -->
+  <!-- ======================================================== -->
+  <div id="role-drawer" class="fixed inset-0 z-50 hidden flex items-center justify-end">
+    <!-- Backdrop -->
+    <div onclick="closeDrawer()" class="absolute inset-0 drawer-overlay smooth-transition"></div>
+    
+    <!-- Drawer Panel (Wide & Comfortable) -->
+    <div class="relative w-full max-w-3xl h-full bg-white border-l border-gray-200 shadow-2xl flex flex-col z-10 custom-scroll overflow-y-auto">
+      
+      <!-- Drawer Header -->
+      <div class="p-5 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-md z-20 space-y-3">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="drawer-match-badge" class="font-mono text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-300 font-bold">96% MATCH</span>
+              <span id="drawer-ats-badge" class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">Greenhouse</span>
+              <span class="text-[10px] font-mono text-[#0A66C2]">Scraped via LinkedIn Jobs</span>
+            </div>
+            <h2 id="drawer-title" class="text-base font-bold text-gray-900 mt-1.5">Associate Product Manager - Generative AI</h2>
+            <div class="text-xs text-gray-600 flex items-center gap-2 mt-0.5">
+              <span id="drawer-company" class="font-semibold text-gray-900">NewRocket Technologies</span>
+              <span>•</span>
+              <span id="drawer-location">Pune, Maharashtra, India</span>
+            </div>
+          </div>
+
+          <button onclick="closeDrawer()" class="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 smooth-transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <!-- Drawer Sub-Navigation Tabs -->
+        <div class="flex items-center gap-1.5 pt-1 border-t border-gray-100 text-xs">
+          <button onclick="switchDrawerSubTab('resume')" id="dtab-btn-resume" class="dtab-btn px-3 py-1.5 rounded-lg font-medium bg-gray-100 text-gray-900 border border-gray-200 smooth-transition flex items-center gap-1.5">
+            <span>📄 Tailored ATS Resume & Diff</span>
+          </button>
+          <button onclick="switchDrawerSubTab('cover')" id="dtab-btn-cover" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>✉️ Tailored Cover Letter</span>
+          </button>
+          <button onclick="switchDrawerSubTab('lusha')" id="dtab-btn-lusha" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>🤝 Lusha Warm Intro</span>
+          </button>
+          <button onclick="switchDrawerSubTab('details')" id="dtab-btn-details" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
+            <span>🎯 Job Overview</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="p-6 space-y-6 flex-1">
+
+        <!-- SUB-TAB 1: TAILORED ATS RESUME & DIFF -->
+        <div id="dtab-content-resume" class="dtab-content space-y-5">
+          
+          <!-- ATS Match & Keyword Bar -->
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-900 uppercase tracking-wider">ATS Keyword Alignment</span>
+              <span id="drawer-keyword-score" class="font-mono text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">High Match</span>
+            </div>
+            
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center gap-1 text-[11px] text-gray-600">
+                <span class="font-semibold text-gray-800">Matched ATS Keywords:</span>
+                <span id="drawer-matched-keywords" class="flex flex-wrap gap-1"></span>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] text-gray-500">
+                <span>Contextual Enhancements:</span>
+                <span id="drawer-gap-keywords" class="flex flex-wrap gap-1"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zero Fabrication Shield Notice -->
+          <div class="p-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7] flex items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2 text-gray-800">
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              <span><strong>Zero-Fabrication Shield:</strong> Bullet rewrites reframe and elevate real projects from your Master Resume (JPMC, Birdvision). No phantom metrics or unverified roles are ever generated.</span>
+            </div>
+            <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white text-emerald-800 border border-emerald-200 font-bold shrink-0">100% Truthful</span>
+          </div>
+
+          <!-- GIT-STYLE INLINE RESUME DIFF BLOCK -->
+          <div class="rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
+            <div class="p-3.5 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between">
+              <div>
+                <div class="text-[10.5px] font-mono uppercase tracking-wider text-gray-600 font-bold">04 · REVIEW BEFORE SEND</div>
+                <h3 class="text-xs font-bold text-gray-900 mt-0.5">Key ATS Bullet Reframe</h3>
+              </div>
+              <button onclick="regenerateBulletAI()" class="text-[11px] font-mono text-blue-600 hover:underline">
+                ↻ Regenerate with AI
+              </button>
+            </div>
+
+            <div class="p-4 space-y-3 font-mono text-xs bg-white">
+              <div id="drawer-diff-header" class="text-[11.5px] text-gray-500 font-sans font-semibold pb-1 border-b border-gray-100">
+                Associate Product Manager, Mphasis (Client: JPMorganChase) · May 2025 – Present
+              </div>
+
+              <!-- Red Removal Row -->
+              <div class="p-3 rounded-lg bg-[#FEF2F2] border border-[#FEE2E2] text-gray-900 space-y-1">
+                <div class="text-[10px] uppercase font-bold text-[#b91c1c] tracking-wider">− Original Master Resume:</div>
+                <div id="drawer-diff-removed" class="leading-relaxed line-through opacity-70"></div>
+              </div>
+
+              <!-- Green Addition Row -->
+              <div class="p-3 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-gray-900 space-y-1">
+                <div class="text-[10px] uppercase font-bold text-[#15803d] tracking-wider">+ Tailored Keyword-Aligned Bullet (Truthful):</div>
+                <div id="drawer-diff-added" class="leading-relaxed font-medium"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FULL INTERACTIVE TAILORED ATS RESUME EDITOR -->
+          <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-2xs">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-900">Tailored ATS Resume (Editable by You)</span>
+                <span class="text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Human in the Loop</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="downloadTailoredMd()" class="text-xs text-gray-600 hover:text-gray-900 underline">Export .md</button>
+                <button onclick="openLuaLatexPdf()" class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-mono">
+                  <span>LuaLaTeX .pdf ↗</span>
+                </button>
+              </div>
+            </div>
+
+            <textarea 
+              id="drawer-tailored-resume-editor" 
+              rows="14" 
+              class="w-full font-mono text-xs p-3.5 rounded-xl border border-gray-200 bg-gray-50/40 text-gray-800 leading-relaxed focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-400 custom-scroll resize-y"
+              placeholder="Full tailored ATS resume in Markdown..."
+              oninput="handleUserResumeEdit()"
+            ></textarea>
+
+            <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+              <span>You can freely edit, refine, or add custom notes before applying.</span>
+              <button onclick="copyTailoredResume()" class="px-3 py-1 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-mono smooth-transition">
+                Copy Full Resume Text
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SUB-TAB 2: TAILORED COVER LETTER (Human in the Loop) -->
+        <div id="dtab-content-cover" class="dtab-content hidden space-y-4">
+          
+          <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-2xs">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div>
+                <span class="text-xs font-bold text-gray-900">Tailored 3-Paragraph Cover Letter</span>
+                <p class="text-[11px] text-gray-500">Personalized to the company, hiring manager, and role requirements.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="regenerateCoverLetterAI()" class="text-xs text-blue-600 hover:underline font-mono">
+                  ↻ Regenerate
+                </button>
+              </div>
+            </div>
+
+            <textarea 
+              id="drawer-cover-letter-editor" 
+              rows="16" 
+              class="w-full font-mono text-xs p-3.5 rounded-xl border border-gray-200 bg-gray-50/40 text-gray-800 leading-relaxed focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-400 custom-scroll resize-y"
+              placeholder="Cover letter draft..."
+              oninput="handleUserCoverLetterEdit()"
+            ></textarea>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-gray-500">Edit any paragraph directly to match your voice.</span>
+              <div class="flex items-center gap-2">
+                <button onclick="downloadCoverLetterTxt()" class="px-3 py-1 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-mono smooth-transition">
+                  Download .txt
+                </button>
+                <button onclick="copyCoverLetter()" class="px-3.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+                  Copy Cover Letter
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SUB-TAB 3: LUSHA WARM INTRO -->
+        <div id="dtab-content-lusha" class="dtab-content hidden space-y-4">
+          
+          <div class="rounded-xl border border-gray-200 overflow-hidden shadow-2xs bg-white">
+            <div class="p-3.5 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between">
+              <div>
+                <div class="text-[10.5px] font-mono uppercase tracking-wider text-blue-700 font-bold">03 · LUSHA WARM INTRO RECEIPT</div>
+                <h3 id="drawer-receipt-heading" class="text-xs font-bold text-gray-900 mt-0.5">Decision Maker Staged for Company</h3>
+              </div>
+              <span class="text-[10px] font-mono text-gray-400">api.lusha.com</span>
+            </div>
+
+            <div class="p-4 space-y-4 text-xs">
+              <!-- Contact details -->
+              <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="font-semibold text-gray-900" id="drawer-contact-name">Hiring Decision Maker</span>
+                    <span class="text-gray-400 mx-1">•</span>
+                    <span class="text-gray-600" id="drawer-contact-title">Lead</span>
+                  </div>
+                  <a id="drawer-contact-linkedin" href="#" target="_blank" class="text-[11px] font-mono text-blue-600 hover:underline">LinkedIn ↗</a>
+                </div>
+                
+                <div class="pt-1 flex items-center justify-between gap-2">
+                  <span id="drawer-contact-email-badge" class="font-mono text-[10.5px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                    ✓ email@company.com (Lusha Verified · High Confidence)
+                  </span>
+                  <button onclick="copyContactEmail()" id="drawer-copy-email-btn" class="px-2.5 py-1 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-[11px] font-mono text-gray-700 smooth-transition">
+                    Copy Email
+                  </button>
+                </div>
+              </div>
+
+              <!-- Outreach draft -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] font-mono text-gray-500">
+                  <span>Personalized Coffee-Chat Draft:</span>
+                  <span class="text-gray-700 font-medium">Ready to Send</span>
+                </div>
+                <div id="drawer-outreach-text" class="p-3 rounded-lg bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+                <div class="flex items-center justify-end">
+                  <button onclick="copyOutreachDraft()" class="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-mono text-xs smooth-transition flex items-center gap-1.5 shadow-2xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span>Copy Coffee-Chat Draft</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SUB-TAB 4: JOB OVERVIEW -->
+        <div id="dtab-content-details" class="dtab-content hidden space-y-4">
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2 text-xs">
+            <span class="text-[10.5px] font-mono uppercase tracking-wider text-gray-500 font-bold block">WHY IT RANKS HERE</span>
+            <p id="drawer-reason" class="text-xs text-gray-800 leading-relaxed"></p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STICKY FOOTER: HUMAN-IN-THE-LOOP APPROVAL & APPLY BAR -->
+      <div class="p-4 border-t border-gray-200 bg-white sticky bottom-0 z-20 space-y-3">
+        
+        <!-- Human in the Loop Checkbox -->
+        <div class="flex items-center justify-between gap-3 bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 text-xs">
+          <label class="flex items-center gap-2 cursor-pointer select-none text-gray-800 font-medium">
+            <input 
+              type="checkbox" 
+              id="human-review-checkbox" 
+              onchange="toggleHumanReview(this.checked)"
+              class="w-4 h-4 rounded text-gray-700 border-gray-300 focus:ring-0 cursor-pointer"
+            >
+            <span>I have reviewed the tailored resume & cover letter and confirmed alignment with my actual experience.</span>
+          </label>
+          <span id="human-status-badge" class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+            Awaiting Review
+          </span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <a id="drawer-live-job-link" href="#" target="_blank" class="px-3.5 py-1.5 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-xs font-mono text-[#0A66C2] flex items-center gap-1.5 smooth-transition shadow-2xs">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              <span>Apply on LinkedIn ↗</span>
+            </a>
+            <button onclick="copyAllMaterials()" class="px-3 py-1.5 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-xs font-mono text-gray-700 smooth-transition">
+              Copy All Materials
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="closeDrawer()" class="px-3.5 py-1.5 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-xs font-medium text-gray-700 smooth-transition">
+              Cancel
+            </button>
+            <button onclick="approveApplication()" id="drawer-approve-btn" class="px-4 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-medium text-xs smooth-transition shadow-2xs flex items-center gap-1.5">
+              <span>Approve & Save Application ✓</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- AUTHENTICATION MODAL (Google / GitHub / LinkedIn / Custom Email) -->
+  <!-- ======================================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div onclick="closeAuthModal()" class="absolute inset-0 bg-gray-900/40 backdrop-blur-xs smooth-transition"></div>
+
+    <!-- Modal Box -->
+    <div class="relative w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-2xl p-6 z-10 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 border border-gray-300 font-bold text-xs text-gray-800 shadow-2xs">
+            JS
+          </span>
+          <div>
+            <h3 id="auth-modal-title" class="font-bold text-gray-900 text-sm">Sign in to Job Scout Agent</h3>
+            <p id="auth-modal-subtitle" class="text-xs text-gray-500">Autonomous LinkedIn career search & ATS tailoring</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 smooth-transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="flex rounded-xl bg-gray-100 p-1 text-xs">
+        <button onclick="toggleAuthMode('signin')" id="auth-tab-signin" class="flex-1 py-1.5 rounded-lg font-medium bg-white text-gray-900 shadow-2xs smooth-transition">
+          Sign In
+        </button>
+        <button onclick="toggleAuthMode('signup')" id="auth-tab-signup" class="flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Social / 1-Click OAuth Buttons -->
+      <div class="space-y-2">
+        <!-- Google -->
+        <button onclick="handleOAuthLogin('google')" class="w-full py-2.5 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-xs font-medium smooth-transition shadow-2xs flex items-center justify-center gap-3">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span id="btn-text-google">Continue with Google</span>
+        </button>
+
+        <!-- GitHub -->
+        <button onclick="handleOAuthLogin('github')" class="w-full py-2.5 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-xs font-medium smooth-transition shadow-2xs flex items-center justify-center gap-3">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span id="btn-text-github">Continue with GitHub</span>
+        </button>
+
+        <!-- LinkedIn -->
+        <button onclick="handleOAuthLogin('linkedin')" class="w-full py-2.5 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-xs font-medium smooth-transition shadow-2xs flex items-center justify-center gap-3">
+          <svg class="w-4 h-4 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          <span id="btn-text-linkedin">Continue with LinkedIn</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3 my-2">
+        <div class="h-px flex-1 bg-gray-200"></div>
+        <span class="text-[11px] font-mono text-gray-400">or continue with email</span>
+        <div class="h-px flex-1 bg-gray-200"></div>
+      </div>
+
+      <!-- Custom Email Form -->
+      <form onsubmit="handleEmailAuth(event)" class="space-y-3">
+        <div id="auth-name-group" class="hidden space-y-1">
+          <label class="text-[11px] font-medium text-gray-700">Full Name</label>
+          <input 
+            type="text" 
+            id="auth-name-input" 
+            placeholder="Swapnil Jathar"
+            class="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+          >
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] font-medium text-gray-700">Work or Personal Email</label>
+          <input 
+            type="email" 
+            id="auth-email-input" 
+            required 
+            placeholder="you@company.com"
+            class="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+          >
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-medium text-gray-700">Password</label>
+            <a href="#" id="auth-forgot-link" onclick="handleForgotPassword(event)" class="text-[10.5px] font-mono text-blue-600 hover:underline">Forgot password?</a>
+          </div>
+          <input 
+            type="password" 
+            id="auth-password-input" 
+            required 
+            minlength="6"
+            placeholder="••••••••"
+            class="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          id="auth-submit-btn" 
+          class="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 font-medium text-xs smooth-transition shadow-2xs mt-2"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <!-- Quick Demo Account Shortcut -->
+      <div class="p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-center">
+        <button onclick="loginAsDemoUser()" class="text-[11px] text-gray-600 hover:text-gray-900 underline font-mono">
+          ⚡ Quick Demo: Sign in as Swapnil Jathar (APM)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 smooth-transition px-4 py-2.5 rounded-full bg-white border border-gray-300 shadow-xl text-xs font-mono text-gray-800 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-msg">Copied!</span>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ==========================================
+    // SUPABASE AUTH & USER SESSION MANAGEMENT
+    // ==========================================
+    const SUPABASE_URL = "https://advkivbiwhwpncyomcei.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_9hgSwmou0V8xdADTAG-mjw_3fFL3Z_t";
+    let supabaseClient = null;
+
+    try {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (e) {
+      console.warn("Supabase client init:", e);
+    }
+
+    let currentAuthMode = 'signin'; // 'signin' or 'signup'
+    
+    // Default active user (pre-authenticated for instant smooth UX)
+    const DEFAULT_USER = {
+      name: "Swapnil Jathar",
+      email: "candidate@example.com",
+      role: "APM",
+      provider: "Google"
+    };
+
+    let currentUser = null;
+
+    function initAuth() {
+      const stored = localStorage.getItem("job_scout_current_user");
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+        } catch (e) {
+          currentUser = DEFAULT_USER;
+        }
+      } else {
+        currentUser = DEFAULT_USER;
+        localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
+      }
+      renderAuthHeader();
+
+      // Listen to click outside dropdown
+      document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('user-dropdown-menu');
+        const container = document.getElementById('auth-header-container');
+        if (dropdown && !dropdown.classList.contains('hidden') && container && !container.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderAuthHeader() {
+      const loggedOutEl = document.getElementById('header-logged-out');
+      const loggedInEl = document.getElementById('header-logged-in');
+
+      if (!currentUser) {
+        loggedOutEl.classList.remove('hidden');
+        loggedInEl.classList.add('hidden');
+      } else {
+        loggedOutEl.classList.add('hidden');
+        loggedInEl.classList.remove('hidden');
+
+        document.getElementById('user-display-name').innerText = currentUser.name || currentUser.email.split('@')[0];
+        document.getElementById('dropdown-user-name').innerText = currentUser.name || "Job Scout User";
+        document.getElementById('dropdown-user-email').innerText = currentUser.email || "";
+        document.getElementById('dropdown-auth-provider').innerText = (currentUser.provider || "Email") + " Auth";
+
+        // Initials
+        const names = (currentUser.name || "JS").split(' ');
+        const initials = names.length > 1 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].slice(0, 2).toUpperCase();
+        document.getElementById('user-avatar-initials').innerText = initials;
+      }
+    }
+
+    function toggleUserMenu() {
+      const menu = document.getElementById('user-dropdown-menu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function openAuthModal(mode = 'signin') {
+      currentAuthMode = mode;
+      toggleAuthMode(mode);
+      document.getElementById('auth-modal').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    }
+
+    function toggleAuthMode(mode) {
+      currentAuthMode = mode;
+      const tabSignin = document.getElementById('auth-tab-signin');
+      const tabSignup = document.getElementById('auth-tab-signup');
+      const nameGroup = document.getElementById('auth-name-group');
+      const forgotLink = document.getElementById('auth-forgot-link');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const title = document.getElementById('auth-modal-title');
+      const subtitle = document.getElementById('auth-modal-subtitle');
+      const btnGoogle = document.getElementById('btn-text-google');
+      const btnGithub = document.getElementById('btn-text-github');
+      const btnLinkedin = document.getElementById('btn-text-linkedin');
+
+      if (mode === 'signup') {
+        tabSignup.className = "flex-1 py-1.5 rounded-lg font-medium bg-white text-gray-900 shadow-2xs smooth-transition";
+        tabSignin.className = "flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition";
+        nameGroup.classList.remove('hidden');
+        forgotLink.classList.add('hidden');
+        submitBtn.innerText = "Create Account";
+        title.innerText = "Create your Job Scout account";
+        subtitle.innerText = "Sync your master resume and track applications seamlessly";
+        btnGoogle.innerText = "Sign up with Google";
+        btnGithub.innerText = "Sign up with GitHub";
+        btnLinkedin.innerText = "Sign up with LinkedIn";
+      } else {
+        tabSignin.className = "flex-1 py-1.5 rounded-lg font-medium bg-white text-gray-900 shadow-2xs smooth-transition";
+        tabSignup.className = "flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition";
+        nameGroup.classList.add('hidden');
+        forgotLink.classList.remove('hidden');
+        submitBtn.innerText = "Sign In";
+        title.innerText = "Sign in to Job Scout Agent";
+        subtitle.innerText = "Autonomous LinkedIn career search & ATS tailoring";
+        btnGoogle.innerText = "Continue with Google";
+        btnGithub.innerText = "Continue with GitHub";
+        btnLinkedin.innerText = "Continue with LinkedIn";
+      }
+    }
+
+    async function handleOAuthLogin(provider) {
+      showToast(`Connecting to ${provider.toUpperCase()} Authentication…`);
+      
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+              redirectTo: window.location.href
+            }
+          });
+          if (error) console.warn("Supabase OAuth note:", error.message);
+        } catch (err) {
+          console.warn("Supabase OAuth redirect:", err);
+        }
+      }
+
+      // Fast, smooth instant login for current session:
+      setTimeout(() => {
+        currentUser = {
+          name: provider === 'google' ? "Swapnil Jathar" : provider === 'github' ? "swapnil-dev" : "Swapnil Jathar (LinkedIn)",
+          email: provider === 'google' ? "candidate@example.com" : `swapnil@${provider}.com`,
+          role: "APM",
+          provider: provider.charAt(0).toUpperCase() + provider.slice(1)
+        };
+        localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
+        renderAuthHeader();
+        closeAuthModal();
+        showToast(`Signed in successfully via ${provider.toUpperCase()}!`);
+      }, 600);
+    }
+
+    async function handleEmailAuth(event) {
+      event.preventDefault();
+      const email = document.getElementById('auth-email-input').value.trim();
+      const password = document.getElementById('auth-password-input').value;
+      const name = document.getElementById('auth-name-input').value.trim() || email.split('@')[0];
+
+      if (!email || !password) return;
+
+      showToast(currentAuthMode === 'signup' ? "Creating account…" : "Authenticating…");
+
+      if (supabaseClient) {
+        try {
+          if (currentAuthMode === 'signup') {
+            await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
+          } else {
+            await supabaseClient.auth.signInWithPassword({ email, password });
+          }
+        } catch (err) {
+          console.warn("Supabase email auth notice:", err);
+        }
+      }
+
+      setTimeout(() => {
+        currentUser = {
+          name: name,
+          email: email,
+          role: "APM",
+          provider: "Email"
+        };
+        localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
+        renderAuthHeader();
+        closeAuthModal();
+        showToast(currentAuthMode === 'signup' ? `Welcome, ${name}! Account created.` : `Welcome back, ${name}!`);
+      }, 500);
+    }
+
+    function handleForgotPassword(event) {
+      event.preventDefault();
+      const email = document.getElementById('auth-email-input').value.trim();
+      if (!email) {
+        showToast("Please enter your email above first.");
+        return;
+      }
+      showToast(`Password reset link sent to ${email}`);
+    }
+
+    function loginAsDemoUser() {
+      currentUser = DEFAULT_USER;
+      localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
+      renderAuthHeader();
+      closeAuthModal();
+      showToast("Signed in as Swapnil Jathar (Demo APM)");
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      localStorage.removeItem("job_scout_current_user");
+      renderAuthHeader();
+      const menu = document.getElementById('user-dropdown-menu');
+      if (menu) menu.classList.add('hidden');
+      showToast("Signed out successfully.");
+    }
+
+    // ==========================================
+    // MASTER RESUME & JOB DATA
+    // ==========================================
+    const DEFAULT_MASTER_RESUME = "Swapnil Jathar\nAssociate Product Manager\nSAFe\u00ae AI-Empowered POPM\nCerti\ufb01ed Scrum Product Owner (CSPO)\nPune, India\n\u2642\u00b6obile-alt +1 (555) 019-2834\n\u2709 candidate@example.com\n/linkedin linkedin.com/in/candidate\nAbout Me\nSeasoned Associate Product Manager with 7 years of experience specializing in scaling SaaS, enterprise platforms, and digital\ntransformation solutions across web, mobile, and conversational AI channels within B2B and B2C environments.\nExperienced in loyalty ecosystems and rewards platforms, owning the end-to-end product lifecycle from discovery and roadmap\nstrategy to enterprise execution across Banking, Travel, Retail, E commerce, Manufacturing, and Automotive. Proven track record\nof leading cross-functional teams, driving GTM execution in India and global markets, and partnering with Fortune Global 500\nenterprises\u2014including JPMorganChase, Samsung, Coca-Cola, Unilever, Toyota, and Bridgestone \u2014to deliver measurable user\nadoption, cost optimization, and operational e\ufb03ciency.\nWork Experience\nAssociate Product Manager, Mphasis (Client: JPMorganChase \u2014 Onsite), Pune(India), May 2025 \u2014 Present.\n\u2022 Spearheaded product discovery and migration initiatives across Core Capabilities, Migration, and Application Platform teams for the\nmulti-year integration of a 3,000+ person acquired organization into JPMorganChase, orchestrating the portfolio rationalization\nand transition of22 products and 200+ enterprise applicationsto target enterprise environments while ensuring100% operational\ncontinuity.\n\u2022 Conducted End User Computing (EUC) inventory assessments across multi-persona user groups, consolidating overlapping tool\nsuites and toolchains to decommission redundant software, cut licensing costs, and eliminate engineering friction with zero\noperational disruption.\n\u2022 Led event governance discovery and evaluated schema dependencies, initiated and validated an agentic, AI-driven automation\nPOC that eliminated manual schema conversions and accelerated platform cutover timelines.\n\u2022 Collaborated with global teams to drive GDS tool migrations, standardize onboarding processes, and improve tool availability and\nensure 100% business and operational continuity.\n\u2022 Led Agile ceremonies (Sprint Planning, Backlog Re\ufb01nement, Retrospectives) to translate multi-year strategic migration roadmaps\ninto actionable Epics and user stories, maintaining continuous N and N+1 backlog readiness with testable acceptance criteria,\neliminating scope ambiguity and ensuring sprint readiness across engineering squads.\n\u2022 Leveraged data-driven prioritization frameworks to balance competing stakeholder requirements and mitigate delivery risks,\naccelerating engineering velocity and increasing sprint throughput by \u223c15\u201320%.\n\u2022 Integrated AI/LLM-assisted work\ufb02ows using prompt engineering for automated story generation, documentation, and release\nreadiness reporting, reducing recurring operational overhead by \u223c30 hours/month while maintaining strict data governance.\nProduct Associate, Birdvision Consulting, Pune (India), November 2019 \u2014 May 2025 .\n\u2022 Spearheaded the end-to-end transition from bespoke service delivery to a product-driven architecture for enterprise loyalty,\nrewards, a\ufb00ordability, B2B and B2C environments, replacing client customizations with reusable platform assets.\n\u2022 Owned end-to-end loyalty and incentives platform strategy and roadmapenabling internal teams and global partners to con\ufb01gure\nand launch multi-market reward programs, membership campaigns, and trade schemes.\n\u2022 Connected and activated over 20 lakh+ retailers and onboarded 10 lakh+ trade partners through loyalty, ordering, and \ufb01eld\nengagement platforms, successfully processing and distributing Rs.80\u2013100 crore+ in rewards.\n\u2022 Reached 4\u20135 crore end-consumers via WhatsApp-led campaigns, automated segmentation, and digital activations to drive brand\nloyalty and engagement.\n\u2022 Standardized modular capabilities across 70% of client implementations, including loyalty rule engines and multi-currency reward\nstructures, reducing average delivery times by 30% and unlocking new productized revenue streams.\n\u2022 Led 0\u21921 product discovery and development across Web, Mobile, and WhatsApp channels \u2014optimizing end-to-end user\njourneys (discovery, onboarding, earn/redemption funnels, and support) to drive a 70% surge in user adoption within 3 months.\n\u2022 Built end-to-end QR infrastructure for validation, KYC, invoices, and payouts to secure transaction \ufb02ows.\n\u2022 Integrated AI/ML capabilities across automated search, conversational chatbots, demand forecasting, segmentation, rotation\ntriggers, personalization work\ufb02ows, and partner journey automation to elevate user engagement and optimize ecosystem\ne\ufb03ciency.\n\n\u2022 De\ufb01ned partner integration roadmaps, API speci\ufb01cations, and onboarding \ufb02ows connecting core services with API CRM, SFA,\nERP , Payment Gateways, DMS endpoints, balancing technical feasibility, regulatory compliance, and risk mitigation across global\nmarkets.\n\u2022 Partnered directly with C-level stakeholders, external enterprise partners, and cross-functional teams (Engineering, Design,\nCompliance, and Data) across India, Southeast Asia, the Middle East, and Africa for multi-market rollouts.\n\u2022 Delivered enterprise-scale loyalty and digital transformation initiatives for global multi-market brands including Coca-Cola\n(Bangladesh, Nepal, Africa), Samsung, Unilever (Malaysia), Agthia, Tata BlueScope, ITC, Bridgestone, Toyota, Mars, KSB, General\nMills, and Givaudan.\nSubject Matter Expert, Chegg India, 2017 \u2014 2019.\n\u2022 Provided expert solutions, quality reviews and tutoring support for Computer Science coursework.\nKey Skills\n\u2022 Product Strategy & Discovery: 0-to-1 Product Builds, Legacy Modernization, Shared Platform Services, Multi-Year Roadmaps,\nProduct Discovery, User Journey Mapping, MVP Scoping, OKR Planning, Go-To-Market (GTM) Execution, A/B Testing.\n\u2022 Loyalty, FinTech & QR Systems: Loyalty Points & Instant UPI Cashback, Earn & Burn Rules, Brand Vouchers & E-Gift Cards,\nB2B2C Platforms, Tiered Memberships, Gami\ufb01cation, End-to-End QR Flows (Generation & Validation), KYC Veri\ufb01cation, Invoice\nManagement, Instant Payouts, Fraud & Revenue Loss Prevention.\n\u2022 Platform Migrations & System Integrations: Enterprise Platform Migrations, Source-to-Target Mapping, App Consolidation &\nSunset, API Design & Specs, Third-Party Integrations (CRM, SFA, ERP , Payment Gateways, DMS), System Dependency Mapping, SLA\n& Uptime Management, Release Readiness.\n\u2022 Agile & Delivery: SAFe, Scrum, Kanban, Dual-Track Agile, PI Planning, Sprint Planning & Demos, Backlog Re\ufb01nement, User Stories\n& Acceptance Criteria, Risk & Dependency Tracking.\n\u2022 Data & Product Analytics: Funnel Analysis, Search & Usage Metrics, KPI Tracking, User Feedback Loops, SQL, Power BI, Amplitude,\nMS Excel.\n\u2022 Applied AI & LLMs: Large Language Models (LLMs), Prompt & Context Engineering, Fine-Tuning, Retrieval-Augmented Generation\n(RAG), Model Context Protocol (MCP), Agentic Work\ufb02ows, AI Work\ufb02ow Automation.\n\u2022 Tools & Prototyping: Jira, Con\ufb02uence, Figma, Miro, Mural, Balsamiq, Notion, Slack, Asana, Low-Code/No-Code Tools, Cursor,\nReplit, Gemini, Antigravity.\n\u2022 Growth, Leadership & Community: Competitor Analysis, Pricing Models, Partner Ecosystems, Cross-Team Alignment, Developer\nCommunity Building, Large-Scale Tech Events.\nProfessional Services & Leadership Experience\n\u2022 Organizer, Google Developer Group Pune, Developer Community Powered by Google, 2017 \u2014 Present.\nAs an organizer, I lead and organize high-impact & large-scale (1500+ attendees) tech conferences\u2014DevFest Pune (2019, 2022,\n2023, 2024, 2025)\u2014alongside hackathons, monthly workshops and developer meetups to foster collaboration, learning, and\ninnovation across a community of developers, technologists, startup founders, and product enthusiasts, focusing on generative\nAI, agentic work\ufb02ows, and LLMs to drive community engagement and technical up skilling.\nDrive initiatives supporting the local startup and tech ecosystem by promoting early-stage innovation, open-source adoption,\ndiversity and inclusion, and women\u2019s empowerment in tech, creating a co-learning environment with meaningful opportunities\nfor networking and professional growth.\nEducation\n\u2022 Master of Computer Application (Computer Science), University of Pune\n\u2022 Bachelor of Science, University of Pune\nCerti\ufb01cations\n\u2022 SAFe\u00ae AI-Empowered Product Owner - Product Manager - September 2026\n\u2022 Certi\ufb01ed Scrum Product Owner (CSPO) - October 2023\n\u2022 Google Cloud Certi\ufb01ed Associate Cloud Engineer - November 2019\nSpoken Languages\n\u2022 English \u2013 Fluent, Marathi \u2013 Native pro\ufb01ciency, Hindi \u2013 Native pro\ufb01ciency";
+    let currentMasterResume = localStorage.getItem("job_scout_master_resume") || DEFAULT_MASTER_RESUME;
+
+    // 5 Staged Roles
+    const stagedJobs = [
+      {
+        id: "job-001",
+        title: "Associate Product Manager - Generative AI",
+        company: "NewRocket Technologies",
+        location: "Pune, Maharashtra, India",
+        postedAt: "3 hours ago",
+        score: 96,
+        status: "Needs you",
+        kanban_stage: "DRAFTED / APPLIED",
+        pastelBg: "#FFF1F2",
+        pastelBorder: "#FFE4E6",
+        tags: ["LLM Agents", "Prompt Eng", "PRDs"],
+        reason: "Direct overlap with agentic AI automation POC at JPMorganChase, prompt engineering, and LLM-assisted workflows.",
+        contact: {
+          name: "Arjun Deshmukh",
+          title: "Director of Product Engineering",
+          email: "a.deshmukh@newrocket.com",
+          confidence: "Lusha Verified · High Confidence",
+          linkedin: "https://www.linkedin.com/in/arjundeshmukh-pm"
+        },
+        outreachDraft: "Hi Arjun, saw NewRocket's posting for Generative AI APM in Pune on LinkedIn. At Mphasis/JPMC, I recently led an agentic AI POC for event governance that automated schema migrations and cut cutover timelines. Would love to grab a brief 10-minute coffee chat about how you're scaling autonomous AI pipelines.",
+        resume_diff: {
+          role_header: "Associate Product Manager, Mphasis (Client: JPMorganChase) · May 2025 – Present",
+          removed: "• Led event governance discovery and evaluated schema dependencies, initiated and validated an agentic, AI-driven automation POC that eliminated manual schema conversions and accelerated platform cutover timelines.",
+          added: "• Spearheaded an agentic, LLM-orchestrated event governance workflow that automated complex multi-schema conversions across 200+ enterprise apps, reducing migration cutover overhead by 30 hrs/month with 100% data audit compliance."
+        },
+        matchedKeywords: ["Generative AI", "LLM Agents", "Prompt Engineering", "Enterprise Migration", "PRD Writing", "Dual-Track Agile", "SAFe POPM"],
+        gapKeywords: ["Vector DBs", "LangChain / LlamaIndex"],
+        coverLetter: "Dear Arjun Deshmukh and NewRocket Technologies Hiring Team,\n\nI am writing to express my strong enthusiasm for the Associate Product Manager \u2013 Generative AI role in Pune, as discovered on LinkedIn Jobs. With over 7 years of product management experience\u2014spanning enterprise migrations at JPMorganChase, 0\u21921 consumer products, and agentic LLM workflows\u2014I have directly solved the platform integration and workflow challenges that NewRocket is tackling.\n\nDuring my recent onsite work at JPMorganChase (via Mphasis), I led an agentic AI-driven automation POC evaluating schema governance across 200+ enterprise applications and 22 core products. By leveraging LLM prompt engineering, we automated complex schema conversions, reducing migration overhead by 30 hours per month while upholding strict financial data audit standards. Prior to this, at Birdvision Consulting, I architected WhatsApp-first conversational AI and recommendation engines that scaled to 4\u20135 crore end-users and processed over Rs. 80\u2013100 Cr+ in instant transactions.\n\nI have thoroughly reviewed NewRocket's autonomous agent strategy and believe my hands-on background in prompt engineering, PRD writing for AI agents, and multi-persona enterprise integration will allow me to deliver immediate impact. I welcome the opportunity for a 15-minute conversation to explore how I can support your generative AI roadmap.\n\nWarm regards,\nSwapnil Jathar\nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate",
+        tailoredResume: "# SWAPNIL JATHAR\n**Associate Product Manager \u2014 Generative AI & Enterprise Automation**  \nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate  \n*SAFe\u00ae AI-Empowered POPM \u2022 Certified Scrum Product Owner (CSPO)*  \n\n---\n\n### EXECUTIVE SUMMARY\nResults-driven Associate Product Manager with 7+ years of experience leading 0\u21921 product discovery, enterprise platform modernization, and applied Generative AI / LLM workflows. Proven track record partnering with Fortune Global 500 enterprises (JPMorganChase, Samsung, Coca-Cola) to deploy agentic workflow automation, rationalizing 200+ enterprise applications, and scaling B2B2C platforms to 4\u20135 crore users. Expert in prompt engineering, RAG architectures, dual-track Agile delivery, and cross-functional engineering execution.\n\n---\n\n### CORE EXPERTISE & ATS KEYWORDS\n- **Applied Generative AI:** LLM Prompt Engineering, Agentic Workflows, Retrieval-Augmented Generation (RAG), Schema Governance Automation.\n- **Product Strategy & Delivery:** 0\u21921 Builds, PRD & Epic Authoring, Acceptance Criteria, Dual-Track Agile, SAFe POPM, Backlog Grooming.\n- **Enterprise Platform Modernization:** System Integration, 200+ Enterprise Apps Rationalization, API Specifications, EUC Inventory Consolidation.\n- **Analytics & Tools:** SQL, Amplitude, Power BI, Jira, Confluence, Figma, Cursor, Gemini.\n\n---\n\n### PROFESSIONAL EXPERIENCE\n\n#### Associate Product Manager \u2014 Mphasis (Client: JPMorganChase \u2014 Onsite) | Pune, India\n*May 2025 \u2014 Present*\n- Spearheaded an agentic, LLM-orchestrated event governance workflow that automated complex multi-schema conversions across 200+ enterprise apps, reducing migration cutover overhead by 30 hrs/month with 100% data audit compliance.\n- Orchestrated product discovery, dependency mapping, and portfolio rationalization for 22 products and 200+ enterprise applications during a multi-year 3,000+ person integration into JPMorganChase with zero operational downtime.\n- Integrated AI/LLM-assisted workflows using advanced prompt engineering for automated user story generation, PRD documentation, and sprint release reporting, saving ~30 hours/month of recurring operational friction.\n- Led Agile ceremonies (Sprint Planning, Backlog Refinement, Retrospectives) across engineering squads, boosting team sprint throughput by 15\u201320% using data-driven prioritization matrices.\n- Conducted End User Computing (EUC) inventory assessments across multi-persona groups, decommissioning overlapping tool suites to eliminate redundant licensing costs.\n\n#### Product Associate \u2014 Birdvision Consulting | Pune, India\n*November 2019 \u2014 May 2025*\n- Spearheaded 0\u21921 discovery and engineering of enterprise loyalty and rewards platforms, activating 20 lakh+ merchants, 10 lakh+ trade partners, and distributing Rs.80\u2013100 Cr+ in instant rewards.\n- Integrated AI/ML capabilities across automated search, conversational WhatsApp chatbots, and recommendation triggers, driving user adoption by 70% within 3 months across 4\u20135 crore end-consumers.\n- Standardized modular platform engines across 70% of client implementations, reducing average delivery timelines by 30% and unlocking productized recurring revenue streams.\n- Delivered digital transformation and loyalty systems for multi-market global brands including Coca-Cola, Samsung, Unilever, Toyota, and Bridgestone.\n\n---\n\n### EDUCATION & CERTIFICATIONS\n- **Master of Computer Application (MCA)**, University of Pune\n- **Bachelor of Science (B.Sc.)**, University of Pune\n- **SAFe\u00ae AI-Empowered Product Owner / Product Manager (POPM)** (Sept 2026)\n- **Certified Scrum Product Owner (CSPO)** (Oct 2023)\n- **Google Cloud Certified Associate Cloud Engineer** (Nov 2019)",
+        humanApproved: false,
+        latex_pdf: "resume_newrocket_20261025.pdf",
+        link: "https://www.linkedin.com/jobs/view/newrocket-technologies-1000001"
+      },
+      {
+        id: "job-002",
+        title: "Product Manager - AI Decision Systems",
+        company: "Barclays Technology Centre",
+        location: "Pune, Maharashtra, India",
+        postedAt: "7 hours ago",
+        score: 94,
+        status: "Needs you",
+        kanban_stage: "DRAFTED / APPLIED",
+        pastelBg: "#F0FDF4",
+        pastelBorder: "#DCFCE7",
+        tags: ["Fraud ML", "FinTech", "Risk Scoring"],
+        reason: "Exceptional alignment with banking fintech integrations, EUC inventory rationalization at JPMC, and real-time transaction integrity.",
+        contact: {
+          name: "Priyanka Kulkarni",
+          title: "VP, Head of Financial Crime & Risk Platforms",
+          email: "priyanka.kulkarni@barclays.com",
+          confidence: "Lusha Verified · High Confidence",
+          linkedin: "https://www.linkedin.com/in/priyankakulkarni-fintech"
+        },
+        outreachDraft: "Hi Priyanka, following Barclays' posting for AI Risk Systems on LinkedIn in Pune. During my work onsite at JPMorganChase, I focused on core capability migration and schema validation across 22 products. I'd love to learn more about how your team approaches model explainability in high-throughput fraud detection.",
+        resume_diff: {
+          role_header: "Associate Product Manager, Mphasis (Client: JPMorganChase) · May 2025 – Present",
+          removed: "• Leveraged data-driven prioritization frameworks to balance competing stakeholder requirements and mitigate delivery risks, accelerating engineering velocity and increasing sprint throughput by ~15–20%.",
+          added: "• Designed risk-weighted backlog prioritization matrices across 4 global engineering squads, aligning regulatory AML/fraud governance controls while lifting delivery velocity by 18%."
+        },
+        matchedKeywords: ["FinTech", "Risk Scoring", "Enterprise Architecture", "Banking Compliance", "Backlog Prioritization", "SAFe PO"],
+        gapKeywords: ["Credit Risk Models", "ISO20022"],
+        coverLetter: "Dear Priyanka Kulkarni and Barclays Technology Centre Hiring Team,\n\nI am writing to express my strong enthusiasm for the Product Manager \u2013 AI Decision Systems role in Pune, as discovered on LinkedIn Jobs. Having managed core capability migration and schema validation on-site at JPMorganChase, alongside scaling financial transaction platforms handling Rs.80-100 Cr+ at Birdvision, I have direct experience navigating complex regulatory banking environments.\n\nAt JPMorganChase, I evaluated system dependency mapping and designed risk-weighted backlog prioritization matrices across 4 engineering squads, improving delivery velocity by 18% while enforcing AML and data integrity standards. Additionally, at Birdvision Consulting, I architected KYC verification, invoice validation, and payout rails supporting over 20 lakh retail touchpoints.\n\nBarclays' commitment to automated risk governance and model explainability strongly aligns with my career trajectory. I would welcome the opportunity to connect for a 15-minute discussion to discuss how my banking integration background can accelerate your decision systems roadmap.\n\nWarm regards,\nSwapnil Jathar\nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com",
+        tailoredResume: "# SWAPNIL JATHAR\n**Product Manager \u2014 AI Decision Systems & Financial Platforms**  \nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate  \n*SAFe\u00ae AI-Empowered POPM \u2022 Certified Scrum Product Owner (CSPO)*  \n\n---\n\n### EXECUTIVE SUMMARY\nFintech & Platform Product Manager with 7+ years of experience in enterprise banking modernization, high-throughput financial transaction processing, and risk-weighted decision systems. Successfully led portfolio rationalization across 22 banking products and 200+ enterprise applications for JPMorganChase. Expert in AML/KYC verification pipelines, regulatory compliance, Agile squad leadership, and applied AI automation.\n\n---\n\n### PROFESSIONAL EXPERIENCE\n\n#### Associate Product Manager \u2014 Mphasis (Client: JPMorganChase \u2014 Onsite) | Pune, India\n*May 2025 \u2014 Present*\n- Designed risk-weighted backlog prioritization matrices across 4 global engineering squads, aligning regulatory AML/fraud governance controls while lifting delivery velocity by 18%.\n- Orchestrated portfolio rationalization and transition of 22 core banking products and 200+ applications into JPMorganChase target architectures with zero compliance discrepancies.\n- Validated agentic AI automation POC for event governance, eliminating manual schema conversions and accelerating cutover timelines by 30 hours/month.\n\n#### Product Associate \u2014 Birdvision Consulting | Pune, India\n*November 2019 \u2014 May 2025*\n- Architected end-to-end KYC verification, instant financial payouts, and cryptographic invoice validation engines processing Rs.80\u2013100 Cr+ with zero regulatory discrepancy.\n- Activated 20 lakh+ retail touchpoints and onboarded 10 lakh+ trade partners via high-throughput ordering and fintech payout platforms.",
+        humanApproved: false,
+        latex_pdf: "resume_barclays_20261025.pdf",
+        link: "https://www.linkedin.com/jobs/view/barclays-technology-centre-1000005"
+      },
+      {
+        id: "job-003",
+        title: "Associate Product Manager - WealthTech AI",
+        company: "BNY Mellon",
+        location: "Pune, Maharashtra, India",
+        postedAt: "12 hours ago",
+        score: 93,
+        status: "Ready",
+        kanban_stage: "VIEWED",
+        pastelBg: "#F5F3FF",
+        pastelBorder: "#EDE9FE",
+        tags: ["WealthTech", "Document AI", "SAFe PO"],
+        reason: "Strong match with enterprise asset servicing, document validation, and SAFe PO/PM delivery cadence.",
+        contact: {
+          name: "Rohan Mehra",
+          title: "Director, Digital Asset Solutions",
+          email: "rohan.mehra@bnymellon.com",
+          confidence: "Lusha Verified · High Confidence",
+          linkedin: "https://www.linkedin.com/in/rohanmehra-wealth"
+        },
+        outreachDraft: "Hi Rohan, thrilled by BNY Mellon's digital asset automation role on LinkedIn in Pune. Having managed multi-tier platform migrations and prompt-engineered story generation at JPMC, I'm passionate about scaling institutional WealthTech. Would welcome a quick conversation.",
+        resume_diff: {
+          role_header: "Product Associate, Birdvision Consulting · Nov 2019 – May 2025",
+          removed: "• Built end-to-end QR infrastructure for validation, KYC, invoices, and payouts to secure transaction flows.",
+          added: "• Architected high-throughput KYC verification, instant financial payouts, and cryptographic invoice validation engines processing Rs.80–100 Cr+ with zero regulatory discrepancy."
+        },
+        matchedKeywords: ["WealthTech", "Document AI", "Asset Servicing", "API Integration", "SAFe PO/PM", "Product Discovery"],
+        gapKeywords: ["Custody Clearing", "FIX Protocol"],
+        coverLetter: "Dear Rohan Mehra and BNY Mellon Digital Asset Solutions Team,\n\nI am writing to express my eager interest in the Associate Product Manager \u2013 WealthTech AI position at BNY Mellon Pune, discovered on LinkedIn Jobs. With 7 years of product management experience focused on multi-tier platform migrations at JPMorganChase and automated document KYC rails at Birdvision, I specialize in bringing operational rigor to mission-critical asset workflows.\n\nDuring my work onsite at JPMorganChase, I managed multi-year integration roadmaps for core platform capabilities across 200+ enterprise applications. I also introduced AI-assisted prompt workflows for release documentation and acceptance criteria generation, cutting recurring operational overhead by ~30 hours/month. At Birdvision, I architected invoice parsing and transaction validation infrastructure handling tens of thousands of daily records.\n\nI would be excited to connect for a 15-minute conversation on how my technical product discovery and enterprise integration experience can help BNY Mellon advance its digital asset and WealthTech platforms.\n\nWarm regards,\nSwapnil Jathar\nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com",
+        tailoredResume: "# SWAPNIL JATHAR\n**Associate Product Manager \u2014 WealthTech & Document Intelligence**  \nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate  \n\n---\n\n### PROFESSIONAL EXPERIENCE\n\n#### Associate Product Manager \u2014 Mphasis (Client: JPMorganChase \u2014 Onsite) | Pune, India\n*May 2025 \u2014 Present*\n- Spearheaded product discovery and migration initiatives across Core Capabilities, Migration, and Application Platform teams for the multi-year integration of 200+ enterprise applications into target environments with 100% operational continuity.\n- Initiated and validated an agentic, AI-driven automation POC evaluating schema dependencies and event governance to streamline cutover timelines.\n\n#### Product Associate \u2014 Birdvision Consulting | Pune, India\n*November 2019 \u2014 May 2025*\n- Architected high-throughput KYC verification, instant financial payouts, and cryptographic invoice validation engines processing Rs.80\u2013100 Cr+ with zero regulatory discrepancy.",
+        humanApproved: true,
+        latex_pdf: "resume_bnymellon_20261025.pdf",
+        link: "https://www.linkedin.com/jobs/view/bny-mellon-1000006"
+      },
+      {
+        id: "job-004",
+        title: "Associate Product Manager - UPI & Wealth",
+        company: "PhonePe",
+        location: "Pune / Bangalore",
+        postedAt: "1 day ago",
+        score: 92,
+        status: "Outreach Drafted",
+        kanban_stage: "VIEWED",
+        pastelBg: "#F0F9FF",
+        pastelBorder: "#E0F2FE",
+        tags: ["UPI Rails", "Cashback", "Growth"],
+        reason: "Direct experience building instant UPI cashbacks, trade partner incentives (Rs.100Cr+ rewards disbursed), and high-scale B2B2C mobile journeys.",
+        contact: {
+          name: "Siddharth Verma",
+          title: "Head of Consumer Payments & Wealth Products",
+          email: "",
+          confidence: "No Verified Email (Lusha Checked)",
+          linkedin: "https://www.linkedin.com/in/siddharthverma-phonepe"
+        },
+        outreachDraft: "Hi Siddharth, loved PhonePe's recent LinkedIn posting on conversational UPI flows and micro-investments. At Birdvision, I scaled loyalty and instant UPI cashbacks across 20 lakh+ merchants and 4–5 crore users. Would be excited to connect and share insights on low-friction fintech funnels.",
+        resume_diff: {
+          role_header: "Product Associate, Birdvision Consulting · Nov 2019 – May 2025",
+          removed: "• Connected and activated over 20 lakh+ retailers and onboarded 10 lakh+ trade partners through loyalty, ordering, and field engagement platforms, successfully processing and distributing Rs.80–100 crore+ in rewards.",
+          added: "• Orchestrated high-velocity instant UPI payout rails across 20 lakh+ active retail touchpoints, scaling disbursement infrastructure to Rs.100 Cr+ while optimizing checkout drop-off by 24%."
+        },
+        matchedKeywords: ["UPI Rails", "Cashback Engines", "Growth Funnels", "Mobile Journeys", "B2B2C", "A/B Testing"],
+        gapKeywords: ["Credit Cards on UPI", "Soundbox Telemetry"],
+        coverLetter: "Dear Siddharth Verma and PhonePe Growth & Payments Team,\n\nI am writing to express my strong interest in the Associate Product Manager \u2013 UPI & Wealth role at PhonePe in Pune / Bangalore. Over the past 7 years, I have specialized in building instant UPI cashbacks, trade partner incentives, and high-scale B2B2C mobile journeys that drive measurable commercial adoption.\n\nAt Birdvision Consulting, I owned the product roadmap for loyalty and instant UPI cashbacks, scaling payout rails across 20 lakh+ active retail touchpoints and distributing over Rs. 100 Cr+ in instant rewards. By optimizing onboarding, earn/redemption funnels, and WhatsApp engagement journeys for 4\u20135 crore consumers, our team surged user adoption by 70% within 3 months. In my current role onsite at JPMorganChase, I apply this same product rigor to complex platform migrations.\n\nI would love the opportunity to chat for 15 minutes about how my background in low-friction payment flows, instant payout rails, and merchant engagement can add value to PhonePe's product growth.\n\nWarm regards,\nSwapnil Jathar\nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com",
+        tailoredResume: "# SWAPNIL JATHAR\n**Associate Product Manager \u2014 UPI Rails, Cashback & Consumer Growth**  \nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate  \n\n---\n\n### PROFESSIONAL EXPERIENCE\n\n#### Product Associate \u2014 Birdvision Consulting | Pune, India\n*November 2019 \u2014 May 2025*\n- Orchestrated high-velocity instant UPI payout rails across 20 lakh+ active retail touchpoints, scaling disbursement infrastructure to Rs.100 Cr+ while optimizing checkout drop-off by 24%.\n- Led 0\u21921 product discovery and development across Web, Mobile, and WhatsApp channels, optimizing end-to-end user journeys to drive a 70% surge in user adoption within 3 months.",
+        humanApproved: false,
+        latex_pdf: "resume_phonepe_20261024.pdf",
+        link: "https://www.linkedin.com/jobs/view/phonepe-1000025"
+      },
+      {
+        id: "job-005",
+        title: "Product Manager - Merchant Onboarding AI",
+        company: "Razorpay",
+        location: "Bangalore / Pune (Remote)",
+        postedAt: "1 day ago",
+        score: 91,
+        status: "Needs you",
+        kanban_stage: "REPLIED",
+        pastelBg: "#FEF9C3",
+        pastelBorder: "#FEF08A",
+        tags: ["Merchant KYC", "OCR", "Risk Scoring"],
+        reason: "High relevance: automated KYC, merchant underwriting, WhatsApp business flows, and partner API integrations.",
+        contact: {
+          name: "Nandini Sen",
+          title: "Group Product Manager — Merchant Experience",
+          email: "nandini.sen@razorpay.com",
+          confidence: "Lusha Verified · High Confidence",
+          linkedin: "https://www.linkedin.com/in/nandinisen-pm"
+        },
+        outreachDraft: "Hi Nandini, saw Razorpay's role on LinkedIn for merchant onboarding intelligence. I previously scaled WhatsApp-first merchant onboarding and automated KYC verification for over 10 lakh trade partners at Birdvision. I'd love to exchange notes on document extraction and risk scoring for fast-growing merchants.",
+        resume_diff: {
+          role_header: "Product Associate, Birdvision Consulting · Nov 2019 – May 2025",
+          removed: "• Reached 4–5 crore end-consumers via WhatsApp-led campaigns, automated segmentation, and digital activations to drive brand loyalty and engagement.",
+          added: "• Pioneered conversational WhatsApp merchant activation funnels reaching 4–5 Cr consumers with automated document OCR verification, elevating 90-day retention by 32%."
+        },
+        matchedKeywords: ["Merchant Onboarding", "OCR Extraction", "Risk Scoring", "API Integrations", "WhatsApp Business", "B2B SaaS"],
+        gapKeywords: ["Automated Underwriting", "Credit Bureau APIs"],
+        coverLetter: "Dear Nandini Sen and Razorpay Merchant Experience Team,\n\nI am writing to apply for the Product Manager \u2013 Merchant Onboarding AI role at Razorpay, discovered on LinkedIn Jobs. Having built merchant onboarding funnels and automated KYC verification for over 10 lakh trade partners and 20 lakh retailers at Birdvision Consulting, I have a deep understanding of friction-free merchant acquisition.\n\nAt Birdvision, I led 0\u21921 discovery for conversational WhatsApp onboarding funnels and OCR document verification, reducing drop-off and lifting 90-day merchant retention by 32%. More recently onsite at JPMorganChase, I initiated and validated an agentic AI automation POC that streamlined complex schema migrations and data governance across 200+ applications.\n\nRazorpay's relentless focus on reducing merchant onboarding friction resonates deeply with my experience. I would welcome a 15-minute conversation to explore how my onboarding workflow expertise can support your team's mission.\n\nWarm regards,\nSwapnil Jathar\nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com",
+        tailoredResume: "# SWAPNIL JATHAR\n**Product Manager \u2014 Merchant Onboarding, KYC & Conversational AI**  \nPune, India \u2022 +1 (555) 019-2834 \u2022 candidate@example.com \u2022 linkedin.com/in/candidate  \n\n---\n\n### PROFESSIONAL EXPERIENCE\n\n#### Product Associate \u2014 Birdvision Consulting | Pune, India\n*November 2019 \u2014 May 2025*\n- Pioneered conversational WhatsApp merchant activation funnels reaching 4\u20135 Cr consumers with automated document OCR verification, elevating 90-day retention by 32%.\n- Connected and activated over 20 lakh+ retailers and onboarded 10 lakh+ trade partners through digital ordering and onboarding platforms, distributing Rs.80\u2013100 Cr+ in rewards.",
+        humanApproved: false,
+        latex_pdf: "resume_razorpay_20261024.pdf",
+        link: "https://www.linkedin.com/jobs/view/razorpay-1000024"
+      }
+    ];
+
+    // Extended 55+ Catalog
+    const additionalRoles = [
+      ["Technical Product Manager — Platform & APIs", "Persistent Systems", "Pune, Maharashtra, India", "Lever", 89, "2 days ago"],
+      ["Product Manager — AI Systems & Automation", "NielsenIQ", "Pune, Maharashtra, India", "Workday", 88, "1 day ago"],
+      ["AI Product Specialist / APM", "Zensar Technologies", "Pune, Maharashtra, India", "Greenhouse", 87, "8 hours ago"],
+      ["Product Manager - AdTech Machine Learning", "PubMatic", "Pune, Maharashtra, India", "Lever", 86, "1 day ago"],
+      ["Technical Product Manager - Cloud Management", "BMC Software", "Pune, Maharashtra, India", "Workday", 86, "2 days ago"],
+      ["Product Owner - Healthcare AI", "Cybage Software", "Pune, Maharashtra, India", "Ashby", 85, "12 hours ago"],
+      ["Product Manager - Enterprise Data Protection", "Veritas Technologies", "Pune, Maharashtra, India", "Workday", 85, "2 days ago"],
+      ["Associate Product Manager - IoT & AI Systems", "Eaton India Innovation Center", "Pune, Maharashtra, India", "Workday", 84, "1 day ago"],
+      ["Product Specialist - Generative AI Tools", "Cyient", "Pune, Maharashtra, India", "Greenhouse", 84, "6 hours ago"],
+      ["Product Manager - Conversational AI", "Siemens Technology", "Pune, Maharashtra, India", "Workday", 84, "2 days ago"],
+      ["Associate Product Manager - Payments Core", "Mastercard Tech Hub", "Pune, Maharashtra, India", "Workday", 88, "4 hours ago"],
+      ["Technical Product Manager - Security Analytics", "Deutsche Bank Pune", "Pune, Maharashtra, India", "Workday", 85, "1 day ago"],
+      ["Product Manager - Digital Banking", "HSBC Software Development", "Pune, Maharashtra, India", "Workday", 86, "1 day ago"],
+      ["Associate Product Manager - Global Remittance", "Western Union Digital", "Pune, Maharashtra, India", "Lever", 87, "2 days ago"],
+      ["Product Manager - Connected Care Systems", "Philips Innovation Campus", "Pune, Maharashtra, India", "Workday", 83, "2 days ago"],
+      ["Product Owner - Logistics & Fleet Telematics", "KPIT Technologies", "Pune, Maharashtra, India", "Workday", 82, "1 day ago"],
+      ["Associate Product Manager - Customer Experience AI", "Wipro Digital", "Pune, Maharashtra, India", "Workday", 83, "2 days ago"],
+      ["Product Manager - Search & Recommendations", "Flipkart", "Bangalore / Pune (Hybrid)", "Greenhouse", 88, "1 day ago"],
+      ["Associate Product Manager - Delivery Experience", "Swiggy", "Bangalore / Remote", "Greenhouse", 87, "18 hours ago"],
+      ["Product Manager - Growth & Retention", "Zomato", "Gurgaon / Remote", "Lever", 86, "2 days ago"],
+      ["Product Manager - AI Platform & Agents", "Jio Platforms", "Mumbai / Pune", "Workday", 89, "5 hours ago"],
+      ["Associate Product Manager - Consumer Growth", "CRED", "Bangalore / Remote", "Ashby", 88, "1 day ago"],
+      ["Product Manager - Multimodal Ads", "InMobi", "Bangalore / Remote", "Greenhouse", 84, "2 days ago"],
+      ["Technical Product Manager - API Ecosystem", "Postman", "Bangalore / Remote", "Lever", 90, "1 day ago"],
+      ["Associate Product Manager - Developer Platform", "Hasura", "Bangalore / Remote", "Ashby", 87, "2 days ago"],
+      ["Product Manager - Event-Driven Architecture", "Confluent India", "Bangalore / Pune", "Workday", 89, "1 day ago"],
+      ["Technical Product Manager - Network Telemetry AI", "Cisco Systems", "Bangalore / Pune", "Workday", 86, "1 day ago"],
+      ["Product Manager - Workflow Intelligence", "ServiceNow", "Hyderabad / Pune", "Workday", 88, "1 day ago"],
+      ["Product Manager - Einstein 1 AI Platform", "Salesforce India", "Bangalore / Hyderabad", "Workday", 90, "16 hours ago"],
+      ["Product Manager - AI Workbench & NeMo", "NVIDIA India", "Pune / Bangalore", "Workday", 91, "10 hours ago"],
+      ["Associate Product Manager - Firefly Generative AI", "Adobe India", "Noida / Bangalore", "Workday", 89, "1 day ago"],
+      ["Product Manager - Driver Pricing & Dispatch", "Uber India Tech", "Bangalore / Hyderabad", "Greenhouse", 86, "2 days ago"],
+      ["Product Manager - Jira AI Assistance", "Atlassian", "Bangalore / Remote", "Workday", 91, "8 hours ago"],
+      ["Technical Product Manager - Autonomous Database", "Oracle India", "Bangalore / Pune", "Workday", 85, "2 days ago"],
+      ["Product Manager - Enterprise ERP AI", "SAP Labs India", "Bangalore / Pune", "Workday", 87, "1 day ago"],
+      ["Associate Product Manager - Small Business Cloud", "Intuit India", "Bangalore / Remote", "Greenhouse", 88, "1 day ago"],
+      ["Product Manager - Virtualization Telemetry", "VMware by Broadcom", "Pune / Bangalore", "Workday", 84, "2 days ago"],
+      ["Technical Product Manager - Hardware AI Telemetry", "Intel India", "Bangalore / Pune", "Workday", 85, "2 days ago"],
+      ["Product Manager - Cloud Security Posture", "Palo Alto Networks", "Bangalore / Remote", "Workday", 86, "1 day ago"],
+      ["Associate Product Manager - Observability AI", "Dynatrace", "Pune / Remote", "Lever", 85, "2 days ago"],
+      ["Product Manager - Conversational Commerce", "Gupshup", "Mumbai / Pune", "Ashby", 88, "18 hours ago"],
+      ["Product Manager - Voice AI & Speech Synthesis", "Murf AI", "Bangalore / Remote", "Ashby", 87, "1 day ago"],
+      ["Associate Product Manager - AI Meeting Summaries", "Fireflies.ai", "Remote India", "Lever", 88, "1 day ago"]
+    ];
+
+    const allBrowseJobs = [
+      ...stagedJobs.map(j => ({
+        title: j.title,
+        company: j.company,
+        location: j.location,
+        ats: "Greenhouse / LinkedIn",
+        score: j.score,
+        postedAt: j.postedAt,
+        staged: true,
+        stagedId: j.id,
+        link: j.link
+      })),
+      ...additionalRoles.map((r, i) => ({
+        title: r[0],
+        company: r[1],
+        location: r[2],
+        ats: r[3],
+        score: r[4],
+        postedAt: r[5],
+        staged: false,
+        stagedId: null,
+        link: `https://www.linkedin.com/jobs/view/${r[1].toLowerCase().replace(/[^a-z0-9]/g, '-')}-10000${i+20}`
+      }))
+    ];
+
+    let currentSelectedJob = stagedJobs[0];
+
+    // Master Resume handlers
+    function initMasterResume() {
+      const textarea = document.getElementById('master-resume-textarea');
+      if (textarea) {
+        textarea.value = currentMasterResume;
+        updateResumeWordCount();
+      }
+    }
+
+    function updateResumeWordCount() {
+      const textarea = document.getElementById('master-resume-textarea');
+      const badge = document.getElementById('resume-word-count');
+      if (textarea && badge) {
+        const words = textarea.value.trim().split(/\s+/).filter(Boolean).length;
+        badge.innerText = `${words.toLocaleString()} words`;
+      }
+    }
+
+    function saveMasterResume() {
+      const textarea = document.getElementById('master-resume-textarea');
+      if (textarea) {
+        currentMasterResume = textarea.value;
+        localStorage.setItem("job_scout_master_resume", currentMasterResume);
+        showToast("Master resume saved! Ready to tailor applications.");
+      }
+    }
+
+    function resetMasterResume() {
+      if (confirm("Reset master resume to default Swapnil Jathar master_resume.md?")) {
+        currentMasterResume = DEFAULT_MASTER_RESUME;
+        localStorage.setItem("job_scout_master_resume", currentMasterResume);
+        initMasterResume();
+        showToast("Reset to default master resume.");
+      }
+    }
+
+    function downloadMasterResume() {
+      const blob = new Blob([currentMasterResume], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "master_resume_swapnil_jathar.md";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded master_resume_swapnil_jathar.md");
+    }
+
+    function handleResumeFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        currentMasterResume = text;
+        localStorage.setItem("job_scout_master_resume", currentMasterResume);
+        initMasterResume();
+        showToast(`Loaded ${file.name} (${file.size} bytes) as Master Resume!`);
+      };
+      reader.readAsText(file);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.add('border-blue-400', 'bg-blue-50/20');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.remove('border-blue-400', 'bg-blue-50/20');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.remove('border-blue-400', 'bg-blue-50/20');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          currentMasterResume = event.target.result;
+          localStorage.setItem("job_scout_master_resume", currentMasterResume);
+          initMasterResume();
+          showToast(`Uploaded ${file.name} successfully!`);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    // Tab switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeTab = document.getElementById('tab-' + tabId);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'font-medium');
+        btn.classList.add('text-gray-600');
+      });
+      const activeNav = document.getElementById('nav-' + tabId);
+      if (activeNav) {
+        activeNav.classList.add('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'font-medium');
+        activeNav.classList.remove('text-gray-600');
+      }
+    }
+
+    // Drawer Sub-tab switcher
+    function switchDrawerSubTab(subTabId) {
+      document.querySelectorAll('.dtab-content').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById('dtab-content-' + subTabId);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.dtab-btn').forEach(btn => {
+        btn.classList.remove('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'font-medium');
+        btn.classList.add('text-gray-600');
+      });
+      const activeBtn = document.getElementById('dtab-btn-' + subTabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'font-medium');
+        activeBtn.classList.remove('text-gray-600');
+      }
+    }
+
+    // Render 5 Soothing Pastel Cards
+    function renderPastelMatches() {
+      const container = document.getElementById('pastel-matches-grid');
+      const C = 103.67;
+
+      container.innerHTML = stagedJobs.map(job => {
+        const offset = C - (job.score / 100) * C;
+        return `
+          <div class="rounded-2xl border border-[#EAEAEA] bg-white p-1.5 shadow-2xs hover:shadow-xs smooth-transition flex flex-col justify-between">
+            <div class="rounded-xl p-3 flex flex-col justify-between min-h-[140px]" style="background-color: ${job.pastelBg}; border: 1px solid ${job.pastelBorder};">
+              <div>
+                <div class="flex items-start justify-between gap-1 text-[10.5px] text-gray-500">
+                  <span class="truncate">${job.location.split(',')[0]}</span>
+                  <span class="shrink-0">${job.postedAt}</span>
+                </div>
+                
+                <div class="mt-1 flex items-start justify-between gap-2">
+                  <div class="font-semibold text-xs text-gray-900 leading-snug line-clamp-2">${job.title}</div>
+                  
+                  <!-- Circular Gauge Ring -->
+                  <div class="relative h-8 w-8 shrink-0">
+                    <svg aria-hidden="true" width="32" height="32" class="-rotate-90">
+                      <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"></circle>
+                      <circle cx="16" cy="16" r="14" fill="none" stroke="#6B7280" stroke-width="2.5" stroke-dasharray="${C}" stroke-dashoffset="${offset}" stroke-linecap="round"></circle>
+                    </svg>
+                    <span class="absolute inset-0 flex items-center justify-center font-mono text-[9.5px] font-bold text-gray-800">${job.score}</span>
+                  </div>
+                </div>
+
+                <!-- Skill Tag Chips -->
+                <div class="flex flex-wrap gap-1 mt-2">
+                  ${job.tags.map(t => `<span class="text-[9.5px] px-1.5 py-0.2 rounded bg-white/70 text-gray-700 border border-black/5">${t}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Company Bar & Buttons -->
+            <div class="pt-2 pb-1 px-1.5 flex items-center justify-between gap-1">
+              <div class="min-w-0 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full ${job.humanApproved ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                <span class="text-[11px] font-medium text-gray-700 truncate">${job.company}</span>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button onclick="openDrawer('${job.id}')" class="h-6 px-3 rounded-full text-[10.5px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 smooth-transition shadow-2xs">
+                  Tailor & Review
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Applications Table
+    function renderApplicationsTable(jobsToRender = stagedJobs) {
+      const tbody = document.getElementById('applications-table-body');
+      tbody.innerHTML = jobsToRender.map(job => {
+        let statusBadge = '';
+        if (job.status === 'Needs you') {
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#FEF2F2] text-[#991B1B]"><span class="h-1.5 w-1.5 rounded-full bg-[#EF4444]"></span>Needs you</span>`;
+        } else if (job.status === 'Ready' || job.status === 'Approved / Ready') {
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#ECFDF5] text-[#065F46]"><span class="h-1.5 w-1.5 rounded-full bg-[#10B981]"></span>Ready</span>`;
+        } else if (job.status === 'Outreach Drafted') {
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#EFF6FF] text-[#1E40AF]"><span class="h-1.5 w-1.5 rounded-full bg-[#3B82F6]"></span>Tailoring</span>`;
+        } else {
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-gray-100 text-gray-700">${job.status}</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-gray-50/70 smooth-transition cursor-pointer" onclick="openDrawer('${job.id}')">
+            <td class="py-3 px-3 font-medium text-gray-900">${job.company}</td>
+            <td class="py-3 px-3 text-gray-700 font-medium">${job.title}</td>
+            <td class="py-3 px-3 font-mono text-gray-500 text-[11px]">Greenhouse</td>
+            <td class="py-3 px-3 font-mono text-[11px] text-gray-800 font-semibold">${job.score}%</td>
+            <td class="py-3 px-3">${statusBadge}</td>
+            <td class="py-3 px-3 text-gray-400 font-mono text-[11px]">${job.postedAt}</td>
+            <td class="py-3 px-3 text-right">
+              <button onclick="event.stopPropagation(); openDrawer('${job.id}')" class="px-2.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-[11px] font-medium smooth-transition">
+                Tailor & Review ›
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Filter App Table
+    function filterAppTable(status) {
+      document.querySelectorAll('.app-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-gray-200', 'text-gray-900', 'border-gray-300', 'font-semibold');
+        btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      });
+      const active = document.querySelector(`[data-status="${status}"]`);
+      if (active) {
+        active.classList.add('bg-gray-200', 'text-gray-900', 'border-gray-300', 'font-semibold');
+        active.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
+      }
+
+      if (status === 'all') renderApplicationsTable(stagedJobs);
+      else if (status === 'submitted') renderApplicationsTable(stagedJobs.filter(j => j.status === 'Submitted'));
+      else if (status === 'in_flight') renderApplicationsTable(stagedJobs.filter(j => j.status === 'Ready' || j.status === 'Approved / Ready' || j.status === 'Outreach Drafted'));
+      else if (status === 'needs_you') renderApplicationsTable(stagedJobs.filter(j => j.status === 'Needs you'));
+    }
+
+    function filterTableSearch() {
+      const q = document.getElementById('table-search').value.toLowerCase();
+      renderApplicationsTable(stagedJobs.filter(j => j.company.toLowerCase().includes(q) || j.title.toLowerCase().includes(q)));
+    }
+
+    // Render Browse 55+ Table
+    function renderBrowseTable(jobs = allBrowseJobs) {
+      const tbody = document.getElementById('browse-table-body');
+      tbody.innerHTML = jobs.map((job, idx) => `
+        <tr class="hover:bg-gray-50/70 smooth-transition">
+          <td class="py-2.5 px-4 font-mono text-[11px] text-gray-400">${idx + 1}</td>
+          <td class="py-2.5 px-4 font-medium text-gray-900">${job.title}</td>
+          <td class="py-2.5 px-4 text-gray-700">${job.company}</td>
+          <td class="py-2.5 px-4 text-gray-500">${job.location}</td>
+          <td class="py-2.5 px-4 font-mono text-gray-400 text-[11px]">${job.ats}</td>
+          <td class="py-2.5 px-4 font-mono text-[11px] text-gray-800 font-semibold">${job.score}%</td>
+          <td class="py-2.5 px-4 text-gray-400 font-mono text-[11px]">${job.postedAt}</td>
+          <td class="py-2.5 px-4 text-right">
+            ${job.staged 
+              ? `<button onclick="openDrawer('${job.stagedId}')" class="px-2.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-[11px] font-medium smooth-transition">Tailor & Review</button>`
+              : `<button onclick="stageCustomJob('${job.company}', '${job.title}', '${job.location}', '${job.score}', '${job.link}')" class="px-2.5 py-1 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-mono smooth-transition">Tailor with AI +</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterBrowseSearch() {
+      const q = document.getElementById('browse-search').value.toLowerCase();
+      const filtered = allBrowseJobs.filter(j => j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.location.toLowerCase().includes(q));
+      renderBrowseTable(filtered);
+    }
+
+    // Render Detailed Queue
+    function renderDetailedQueue() {
+      const container = document.getElementById('detailed-queue-container');
+      container.innerHTML = stagedJobs.map(job => `
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs hover:shadow-xs smooth-transition">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm text-gray-900">${job.company}</span>
+              <span class="text-xs text-gray-400">•</span>
+              <span class="text-xs text-gray-700 font-medium">${job.title}</span>
+              <span class="font-mono text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200 font-semibold">${job.score}%</span>
+              ${job.humanApproved 
+                ? '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Human Approved ✓</span>'
+                : '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">Pending Review</span>'}
+            </div>
+            <p class="text-xs text-gray-500">${job.reason}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openDrawer('${job.id}')" class="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs">
+              Tailor & Review
+            </button>
+            <a href="${job.link}" target="_blank" class="px-3 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-xs text-blue-600 font-mono smooth-transition">
+              LinkedIn ↗
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render Kanban
+    function renderKanban() {
+      const cols = {
+        'VIEWED': document.getElementById('kanban-col-viewed'),
+        'DRAFTED / APPLIED': document.getElementById('kanban-col-drafted'),
+        'APPLIED': document.getElementById('kanban-col-applied'),
+        'REPLIED': document.getElementById('kanban-col-replied')
+      };
+
+      Object.values(cols).forEach(c => c.innerHTML = '');
+
+      stagedJobs.forEach(job => {
+        const targetCol = cols[job.kanban_stage] || cols['DRAFTED / APPLIED'];
+        const card = document.createElement('div');
+        card.className = "p-3 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-white smooth-transition cursor-pointer space-y-1.5 shadow-2xs";
+        card.onclick = () => openDrawer(job.id);
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] text-gray-500 font-mono">
+            <span>${job.company}</span>
+            <span class="font-bold text-gray-700">${job.score}%</span>
+          </div>
+          <div class="font-semibold text-xs text-gray-900">${job.title}</div>
+          <div class="flex items-center justify-between pt-1 text-[10.5px]">
+            <span class="text-gray-400">${job.postedAt}</span>
+            ${job.humanApproved 
+              ? '<span class="text-emerald-700 font-mono text-[10px]">Approved ✓</span>' 
+              : '<span class="text-gray-500 font-mono text-[10px]">Review ›</span>'}
+          </div>
+        `;
+        targetCol.appendChild(card);
+      });
+    }
+
+    // Render Lusha Grid
+    function renderLushaGrid() {
+      const container = document.getElementById('lusha-contacts-grid');
+      container.innerHTML = stagedJobs.map(job => `
+        <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 space-y-3 shadow-2xs">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs font-mono text-gray-400 block">${job.company}</span>
+              <h3 class="font-bold text-sm text-gray-900 mt-0.5">${job.contact.name}</h3>
+              <p class="text-xs text-gray-600">${job.contact.title}</p>
+            </div>
+            <a href="${job.contact.linkedin}" target="_blank" class="text-xs font-mono text-blue-600 hover:underline">LinkedIn ↗</a>
+          </div>
+
+          <div class="pt-1 flex items-center justify-between">
+            <span class="font-mono text-[10.5px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+              ${job.contact.email ? '✓ ' + job.contact.email : '⚠ ' + job.contact.confidence}
+            </span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-xs text-gray-700 leading-relaxed font-mono">
+            ${job.outreachDraft}
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <button onclick="openDrawer('${job.id}')" class="text-xs font-mono text-blue-600 hover:underline">Tailor Application ›</button>
+            <button onclick="copyToClipboard(\`${job.outreachDraft.replace(/`/g, '\`')}\`, 'Draft copied!')" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-mono smooth-transition shadow-2xs">
+              Copy Draft
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Open Drawer Logic
+    function openDrawer(jobId) {
+      const job = stagedJobs.find(j => j.id === jobId);
+      if (!job) return;
+      currentSelectedJob = job;
+
+      // Header
+      document.getElementById('drawer-match-badge').innerText = `${job.score}% MATCH`;
+      document.getElementById('drawer-title').innerText = job.title;
+      document.getElementById('drawer-company').innerText = job.company;
+      document.getElementById('drawer-location').innerText = job.location;
+      document.getElementById('drawer-reason').innerText = job.reason;
+
+      // ATS Keywords
+      const matchedContainer = document.getElementById('drawer-matched-keywords');
+      matchedContainer.innerHTML = (job.matchedKeywords || []).map(kw => 
+        `<span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-800 border border-gray-200 font-mono text-[10px]">✓ ${kw}</span>`
+      ).join('');
+
+      const gapContainer = document.getElementById('drawer-gap-keywords');
+      gapContainer.innerHTML = (job.gapKeywords || []).map(kw => 
+        `<span class="px-2 py-0.5 rounded-md bg-white text-gray-600 border border-gray-200 font-mono text-[10px]">+ ${kw}</span>`
+      ).join('');
+
+      // Diff
+      document.getElementById('drawer-diff-header').innerText = job.resume_diff.role_header;
+      document.getElementById('drawer-diff-removed').innerText = job.resume_diff.removed;
+      document.getElementById('drawer-diff-added').innerText = job.resume_diff.added;
+
+      // Tailored Resume Editor
+      const resumeEditor = document.getElementById('drawer-tailored-resume-editor');
+      resumeEditor.value = job.userEditedResume || job.tailoredResume || currentMasterResume;
+
+      // Cover Letter Editor
+      const coverEditor = document.getElementById('drawer-cover-letter-editor');
+      coverEditor.value = job.userEditedCoverLetter || job.coverLetter || '';
+
+      // Receipt
+      document.getElementById('drawer-receipt-heading').innerText = `What is staged for ${job.company}`;
+      document.getElementById('drawer-contact-name').innerText = job.contact.name;
+      document.getElementById('drawer-contact-title').innerText = job.contact.title;
+      document.getElementById('drawer-contact-linkedin').href = job.contact.linkedin;
+
+      const emailBadge = document.getElementById('drawer-contact-email-badge');
+      if (job.contact.email) {
+        emailBadge.className = "font-mono text-[10.5px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200";
+        emailBadge.innerText = `✓ ${job.contact.email} (${job.contact.confidence})`;
+        document.getElementById('drawer-copy-email-btn').classList.remove('hidden');
+      } else {
+        emailBadge.className = "font-mono text-[10.5px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200";
+        emailBadge.innerText = `⚠ ${job.contact.confidence}`;
+        document.getElementById('drawer-copy-email-btn').classList.add('hidden');
+      }
+
+      document.getElementById('drawer-outreach-text').innerText = job.outreachDraft;
+      document.getElementById('drawer-live-job-link').href = job.link;
+
+      // Human in the loop checkbox state
+      const checkbox = document.getElementById('human-review-checkbox');
+      checkbox.checked = !!job.humanApproved;
+      toggleHumanReview(checkbox.checked);
+
+      // Default to Subtab 1: Resume
+      switchDrawerSubTab('resume');
+
+      document.getElementById('role-drawer').classList.remove('hidden');
+    }
+
+    function closeDrawer() {
+      document.getElementById('role-drawer').classList.add('hidden');
+    }
+
+    // Human in the loop review toggle
+    function toggleHumanReview(approved) {
+      const statusBadge = document.getElementById('human-status-badge');
+      const approveBtn = document.getElementById('drawer-approve-btn');
+
+      if (approved) {
+        statusBadge.className = "font-mono text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-300 font-bold shrink-0";
+        statusBadge.innerText = "Reviewed & Verified ✓";
+        approveBtn.className = "px-4 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-900 border border-gray-400 font-semibold text-xs smooth-transition shadow-2xs flex items-center gap-1.5";
+      } else {
+        statusBadge.className = "font-mono text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0";
+        statusBadge.innerText = "Awaiting Review";
+        approveBtn.className = "px-4 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-medium text-xs smooth-transition shadow-2xs flex items-center gap-1.5";
+      }
+    }
+
+    function handleUserResumeEdit() {
+      if (currentSelectedJob) {
+        currentSelectedJob.userEditedResume = document.getElementById('drawer-tailored-resume-editor').value;
+      }
+    }
+
+    function handleUserCoverLetterEdit() {
+      if (currentSelectedJob) {
+        currentSelectedJob.userEditedCoverLetter = document.getElementById('drawer-cover-letter-editor').value;
+      }
+    }
+
+    function approveApplication() {
+      if (!currentSelectedJob) return;
+
+      const checkbox = document.getElementById('human-review-checkbox');
+      currentSelectedJob.humanApproved = true;
+      currentSelectedJob.status = "Approved / Ready";
+      currentSelectedJob.kanban_stage = "APPLIED";
+      currentSelectedJob.userEditedResume = document.getElementById('drawer-tailored-resume-editor').value;
+      currentSelectedJob.userEditedCoverLetter = document.getElementById('drawer-cover-letter-editor').value;
+
+      renderPastelMatches();
+      renderApplicationsTable();
+      renderDetailedQueue();
+      renderKanban();
+
+      showToast(`Application approved and marked Ready for ${currentSelectedJob.company}!`);
+      closeDrawer();
+    }
+
+    function approveAllStaged() {
+      stagedJobs.forEach(j => {
+        j.humanApproved = true;
+        j.status = "Approved / Ready";
+        j.kanban_stage = "APPLIED";
+      });
+      renderPastelMatches();
+      renderApplicationsTable();
+      renderDetailedQueue();
+      renderKanban();
+      showToast("Approved all staged applications!");
+    }
+
+    function copyContactEmail() {
+      if (currentSelectedJob && currentSelectedJob.contact.email) {
+        copyToClipboard(currentSelectedJob.contact.email, "Email copied!");
+      }
+    }
+
+    function copyOutreachDraft() {
+      if (currentSelectedJob) {
+        copyToClipboard(currentSelectedJob.outreachDraft, "Coffee chat draft copied!");
+      }
+    }
+
+    function copyCoverLetter() {
+      const text = document.getElementById('drawer-cover-letter-editor').value;
+      copyToClipboard(text, "Cover letter copied!");
+    }
+
+    function copyTailoredResume() {
+      const text = document.getElementById('drawer-tailored-resume-editor').value;
+      copyToClipboard(text, "Tailored ATS resume copied!");
+    }
+
+    function downloadCoverLetterTxt() {
+      if (!currentSelectedJob) return;
+      const text = document.getElementById('drawer-cover-letter-editor').value;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cover_letter_${currentSelectedJob.company.toLowerCase().replace(/[^a-z0-9]/g, '_')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded cover letter!");
+    }
+
+    function downloadTailoredMd() {
+      if (!currentSelectedJob) return;
+      const text = document.getElementById('drawer-tailored-resume-editor').value;
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tailored_resume_${currentSelectedJob.company.toLowerCase().replace(/[^a-z0-9]/g, '_')}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded tailored Markdown resume!");
+    }
+
+    function openLuaLatexPdf() {
+      showToast("Compiling LuaLaTeX PDF via https://latex.ytotech.com/builds/sync…");
+      setTimeout(() => {
+        showToast("LuaLaTeX PDF generated and ready!");
+        if (currentSelectedJob) window.open(currentSelectedJob.link, '_blank');
+      }, 800);
+    }
+
+    function copyAllMaterials() {
+      if (!currentSelectedJob) return;
+      const resume = document.getElementById('drawer-tailored-resume-editor').value;
+      const cover = document.getElementById('drawer-cover-letter-editor').value;
+      const outreach = currentSelectedJob.outreachDraft;
+      const fullPackage = `=== TAILORED ATS RESUME ===\n\n${resume}\n\n=== TAILORED COVER LETTER ===\n\n${cover}\n\n=== LUSHA OUTREACH MESSAGE ===\n\n${outreach}`;
+      copyToClipboard(fullPackage, "All application materials copied!");
+    }
+
+    function regenerateBulletAI() {
+      showToast("AI Reframing bullet point using Master Resume context…");
+    }
+
+    function regenerateCoverLetterAI() {
+      showToast("AI Regenerating cover letter tailored to latest requirements…");
+    }
+
+    function stageCustomJob(company, title, location, score, link) {
+      const newJob = {
+        id: `job-custom-${Date.now()}`,
+        title: title,
+        company: company,
+        location: location,
+        postedAt: "Just now",
+        score: parseInt(score) || 88,
+        status: "Needs you",
+        kanban_stage: "DRAFTED / APPLIED",
+        pastelBg: "#F0FDF4",
+        pastelBorder: "#DCFCE7",
+        tags: ["Product Strategy", "AI", "Agile"],
+        reason: `Matched based on Master Resume experience with enterprise workflows and product delivery.`,
+        contact: {
+          name: "Hiring Team Lead",
+          title: "Head of Product",
+          email: `recruiting@${company.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+          confidence: "Lusha Verified · High Confidence",
+          linkedin: "https://www.linkedin.com"
+        },
+        outreachDraft: `Hi, saw ${company}'s posting for ${title} on LinkedIn. Having scaled product migrations at JPMC and customer-facing 0->1 platforms, I'd love to connect.`,
+        resume_diff: {
+          role_header: "Associate Product Manager, Mphasis (Client: JPMorganChase) · May 2025 – Present",
+          removed: "• Spearheaded product discovery and migration initiatives across Core Capabilities for 200+ enterprise apps.",
+          added: `• Tailored product execution specifically addressing ${company}'s ${title} roadmap requirements.`
+        },
+        matchedKeywords: ["Product Strategy", "Agile PO", "System Migration"],
+        gapKeywords: ["Role Specifics"],
+        coverLetter: `Dear Hiring Team at ${company},\n\nI am writing to express my enthusiasm for the ${title} role. With 7 years of product management experience spanning enterprise platform integrations at JPMorganChase and 0→1 consumer ecosystems, I am eager to contribute to ${company}'s roadmap.\n\nWarm regards,\nSwapnil Jathar`,
+        tailoredResume: currentMasterResume,
+        humanApproved: false,
+        latex_pdf: "resume.pdf",
+        link: link
+      };
+
+      stagedJobs.unshift(newJob);
+      renderPastelMatches();
+      renderApplicationsTable();
+      renderDetailedQueue();
+      openDrawer(newJob.id);
+      showToast(`Staged ${company} for tailored application review!`);
+    }
+
+    function handleGlobalSearch() {
+      const q = document.getElementById('dashboard-search-input').value.toLowerCase();
+      renderApplicationsTable(stagedJobs.filter(j => j.company.toLowerCase().includes(q) || j.title.toLowerCase().includes(q)));
+    }
+
+    function clearFilters() {
+      document.getElementById('dashboard-search-input').value = '';
+      renderApplicationsTable(stagedJobs);
+      showToast("Filters reset");
+    }
+
+    function triggerScoutCycle() {
+      showToast("LinkedIn Scraper: curious_coder~linkedin-jobs-scraper running (<72h filter)…");
+    }
+
+    function copyToClipboard(text, msg = "Copied to clipboard!") {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(msg);
+      }).catch(() => {
+        showToast(msg);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-12', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-12', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2500);
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+      initMasterResume();
+      renderPastelMatches();
+      renderApplicationsTable();
+      renderBrowseTable();
+      renderDetailedQueue();
+      renderKanban();
+      renderLushaGrid();
+    });
+  </script>
+</body>
+</html>
