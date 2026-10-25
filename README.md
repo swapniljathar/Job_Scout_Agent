@@ -1,4 +1,4 @@
-# 🎯 Job Scout Agent · Intelligent Career Navigator & ATS Suite
+## 🎯 Job Scout Agent · Intelligent Career Navigator & ATS Suite
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
