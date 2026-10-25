@@ -20,6 +20,7 @@
       --border-card: #E5E7EB;
       --text-heading: #111827;
       --text-body: #4B5563;
+      --text-muted: #6B7280;
       --brand-primary: #F3F4F6;
       --brand-primary-hover: #E5E7EB;
       --brand-soft-bg: #F9FAFB;
@@ -29,21 +30,38 @@
     body {
       background-color: var(--bg-canvas);
       color: var(--text-heading);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.012em;
       margin: 0;
     }
 
     .font-mono {
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: -0.02em;
     }
 
-    /* Soft Pastel Palette (Light, Soothing & Smooth) */
+    /* Soft Pastel Palette (Preserved 1:1, light, soothing, distraction-free) */
     .bg-pastel-rose { background-color: #FFF1F2; }
     .bg-pastel-green { background-color: #F0FDF4; }
     .bg-pastel-lavender { background-color: #F5F3FF; }
     .bg-pastel-sky { background-color: #F0F9FF; }
     .bg-pastel-amber { background-color: #FEF9C3; }
+
+    /* Tsenta-inspired soothing diffuse card elevation */
+    .soothing-card {
+      background-color: #FFFFFF;
+      border: 1px solid #EAEAEA;
+      border-radius: 1rem;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 2px 8px -2px rgba(0, 0, 0, 0.02);
+      transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .soothing-card:hover {
+      border-color: #D1D5DB;
+      box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+      transform: translateY(-1.5px);
+    }
 
     /* Custom smooth scrollbar */
     .custom-scroll::-webkit-scrollbar {
@@ -68,10 +86,11 @@
 
     .drawer-overlay {
       background: rgba(17, 24, 39, 0.35);
-      backdrop-filter: blur(5px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
-    /* Soothing Grey Selection (Replaces harsh black) */
+    /* Soothing Grey Selection */
     ::selection {
       background-color: #E5E7EB;
       color: #111827;
@@ -82,22 +101,25 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#FAFAFA] text-gray-900">
+<body class="min-h-screen flex flex-col bg-[#FAFAFA] text-gray-900 antialiased selection:bg-gray-200">
 
   <!-- ======================================================== -->
-  <!-- TOP NAVIGATION HEADER -->
+  <!-- TOP NAVIGATION HEADER (Crisp, Soothing, Distraction-Free) -->
   <!-- ======================================================== -->
-  <header class="bg-white border-b border-[#EAEAEA] sticky top-0 z-30 px-6 py-2.5">
+  <header class="bg-white/90 backdrop-blur-md border-b border-[#EAEAEA] sticky top-0 z-30 px-6 py-2.5 transition-all">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
       
       <!-- Brand & Left Nav Tabs -->
       <div class="flex items-center gap-6">
         <!-- Logo -->
-        <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('dashboard')">
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 border border-gray-300 font-bold text-xs text-gray-800 shadow-2xs tracking-wider">
+        <div class="flex items-center gap-2.5 cursor-pointer group" onclick="switchTab('dashboard')">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 border border-gray-300 font-bold text-xs text-gray-800 shadow-2xs tracking-wider group-hover:bg-gray-200 smooth-transition">
             JS
           </span>
-          <span class="font-semibold text-gray-900 text-sm tracking-tight">Job Scout Agent</span>
+          <div class="flex flex-col">
+            <span class="font-semibold text-gray-900 text-sm tracking-tight leading-none">Job Scout Agent</span>
+            <span class="text-[9.5px] font-mono text-gray-500 leading-none mt-0.5">Automated Career Navigator</span>
+          </div>
         </div>
 
         <!-- Horizontal Nav Tabs -->
@@ -107,38 +129,41 @@
           </button>
           <button onclick="switchTab('browse')" id="nav-browse" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
             <span>Browse jobs</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700">55</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 font-semibold">55</span>
           </button>
           <button onclick="switchTab('applications')" id="nav-applications" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
             <span>Applications</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-800">6</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-800 font-semibold">6</span>
           </button>
           <button onclick="switchTab('tracker')" id="nav-tracker" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition">
-            Tracker
+            Pipeline Tracker
           </button>
           <button onclick="switchTab('inbox')" id="nav-inbox" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
-            <span>Lusha Warm Intro</span>
+            <span>Warm Intro</span>
             <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-700 border border-gray-200">5</span>
           </button>
           <button onclick="switchTab('resume')" id="nav-resume" class="nav-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
-            <span>My Resume</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-700 border border-gray-200">Master</span>
+            <span>My Master Resume</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Verified</span>
           </button>
         </nav>
       </div>
 
       <!-- Right Nav Status & User Auth Actions -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <!-- Live Scraper Source Pill -->
         <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF5FB] border border-[#D0E7F9] text-[#0A66C2] text-xs font-mono">
           <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-          <span class="font-medium">LinkedIn Jobs Scraper</span>
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span class="font-medium">LinkedIn Crawler</span>
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
         </div>
 
-        <button onclick="switchTab('resume')" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs flex items-center gap-1.5">
+        <button onclick="switchTab('resume')" class="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 text-xs font-medium smooth-transition shadow-2xs flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <span>Upload / Edit Resume</span>
+          <span>Resume Hub</span>
         </button>
 
         <!-- Dynamic User Auth Container -->
@@ -207,6 +232,72 @@
     <!-- TAB 1: DASHBOARD -->
     <div id="tab-dashboard" class="tab-content space-y-6">
       
+      <!-- TSENTA-INSPIRED AUTONOMOUS AGENT WORKFLOW BANNER -->
+      <div class="bg-white rounded-2xl border border-[#EAEAEA] p-5 shadow-2xs space-y-3.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 text-xs text-gray-800 font-bold shadow-2xs">
+              ⚡
+            </span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Autonomous Career Workflow</h2>
+                <span class="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">Pipeline Active</span>
+              </div>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">Automated LinkedIn sourcing, ATS scoring, human-in-the-loop tailoring, and verified recruiter outreach.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+            <span>Standby: Pune, India</span>
+            <span>•</span>
+            <span class="text-emerald-700 font-medium">Freshness &lt;72h</span>
+          </div>
+        </div>
+
+        <!-- 4 Workflow Steps -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-0.5">
+          <!-- Step 1 -->
+          <div onclick="switchTab('browse')" class="p-3.5 rounded-xl bg-gray-50/70 border border-gray-200/70 hover:border-gray-300 hover:bg-white smooth-transition space-y-1.5 cursor-pointer group">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-bold text-gray-400 group-hover:text-gray-900 smooth-transition">PHASE 01</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            </div>
+            <div class="font-semibold text-xs text-gray-900">Scout & Ingest</div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Continuous crawling of verified roles across Greenhouse, Lever, and Workday.</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div onclick="openDrawer('job-001')" class="p-3.5 rounded-xl bg-gray-50/70 border border-gray-200/70 hover:border-gray-300 hover:bg-white smooth-transition space-y-1.5 cursor-pointer group">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-bold text-gray-400 group-hover:text-gray-900 smooth-transition">PHASE 02</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            </div>
+            <div class="font-semibold text-xs text-gray-900">Multi-Factor ATS Fit</div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Weighted Title, Seniority & Core Skill matching against your master resume.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div onclick="switchTab('applications')" class="p-3.5 rounded-xl bg-gray-50/70 border border-gray-200/70 hover:border-gray-300 hover:bg-white smooth-transition space-y-1.5 cursor-pointer group">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-bold text-gray-400 group-hover:text-gray-900 smooth-transition">PHASE 03</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            </div>
+            <div class="font-semibold text-xs text-gray-900">Human Verification</div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Zero-Fabrication review drawer with git-style bullet diffs and one-click editor.</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div onclick="switchTab('tracker')" class="p-3.5 rounded-xl bg-gray-50/70 border border-gray-200/70 hover:border-gray-300 hover:bg-white smooth-transition space-y-1.5 cursor-pointer group">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-bold text-gray-400 group-hover:text-gray-900 smooth-transition">PHASE 04</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+            </div>
+            <div class="font-semibold text-xs text-gray-900">Outreach & Ledger</div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Lusha hiring manager contact info, coffee-chat notes, and Kanban tracking.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Search & Multi-Filter Control Bar -->
       <div class="bg-white rounded-2xl border border-[#EAEAEA] p-4 shadow-2xs space-y-3">
         <!-- Main Search Input -->
@@ -220,22 +311,22 @@
               id="dashboard-search-input"
               value="AI Product Manager and Product Manager roles in Pune" 
               placeholder="Standing search query: e.g. AI Product Manager in Pune..." 
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 smooth-transition text-gray-900 bg-white"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent smooth-transition text-gray-900 bg-white placeholder-gray-400"
               oninput="handleGlobalSearch()"
             >
           </div>
-          <button onclick="triggerScoutCycle()" class="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-medium text-xs smooth-transition shrink-0 shadow-2xs flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <button onclick="triggerScoutCycle()" class="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-medium text-xs smooth-transition shrink-0 shadow-2xs flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             <span>Scan LinkedIn (&lt;72h)</span>
           </button>
         </div>
 
         <!-- Filter Pills Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-100 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs">
           <div class="flex flex-wrap items-center gap-2">
-            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-900 border border-gray-200 font-medium smooth-transition flex items-center gap-1.5">
+            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-900 border border-gray-200 font-medium smooth-transition flex items-center gap-1.5 shadow-2xs">
               <span>Location: Pune & Remote</span>
-              <span class="text-gray-400 text-[10px]">✕</span>
+              <span class="text-gray-400 hover:text-gray-700 text-[10px]">✕</span>
             </button>
             <button class="px-3 py-1 rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 smooth-transition flex items-center gap-1.5">
               <span>Freshness: &lt; 3 Days</span>
@@ -262,7 +353,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Top Match Roles · High ATS Alignment</h2>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-700 font-medium">5 Staged</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-700 font-semibold border border-blue-100">5 Staged</span>
           </div>
           <span class="text-xs text-gray-400 font-mono">Ranked by ATS Match against Master Resume</span>
         </div>
@@ -604,12 +695,16 @@
       <div class="p-5 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-md z-20 space-y-3">
         <div class="flex items-start justify-between gap-4">
           <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Review & Tailor Workspace</span>
+              <span class="text-gray-300">•</span>
+              <span class="text-[10px] font-mono text-[#0A66C2]">LinkedIn Jobs Verified</span>
+            </div>
             <div class="flex items-center gap-2">
               <span id="drawer-match-badge" class="font-mono text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-300 font-bold">96% MATCH</span>
               <span id="drawer-ats-badge" class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">Greenhouse</span>
-              <span class="text-[10px] font-mono text-[#0A66C2]">Scraped via LinkedIn Jobs</span>
             </div>
-            <h2 id="drawer-title" class="text-base font-bold text-gray-900 mt-1.5">Associate Product Manager - Generative AI</h2>
+            <h2 id="drawer-title" class="text-base font-bold text-gray-900 mt-1.5 tracking-tight">Associate Product Manager - Generative AI</h2>
             <div class="text-xs text-gray-600 flex items-center gap-2 mt-0.5">
               <span id="drawer-company" class="font-semibold text-gray-900">NewRocket Technologies</span>
               <span>•</span>
@@ -617,21 +712,21 @@
             </div>
           </div>
 
-          <button onclick="closeDrawer()" class="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 smooth-transition">
+          <button onclick="closeDrawer()" class="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 smooth-transition" aria-label="Close drawer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
 
         <!-- Drawer Sub-Navigation Tabs -->
         <div class="flex items-center gap-1.5 pt-1 border-t border-gray-100 text-xs">
-          <button onclick="switchDrawerSubTab('resume')" id="dtab-btn-resume" class="dtab-btn px-3 py-1.5 rounded-lg font-medium bg-gray-100 text-gray-900 border border-gray-200 smooth-transition flex items-center gap-1.5">
-            <span>📄 Tailored ATS Resume & Diff</span>
+          <button onclick="switchDrawerSubTab('resume')" id="dtab-btn-resume" class="dtab-btn px-3 py-1.5 rounded-lg font-medium bg-gray-100 text-gray-900 border border-gray-200 smooth-transition flex items-center gap-1.5 shadow-2xs">
+            <span>📄 Tailored Resume & Diff</span>
           </button>
           <button onclick="switchDrawerSubTab('cover')" id="dtab-btn-cover" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
-            <span>✉️ Tailored Cover Letter</span>
+            <span>✉️ Cover Letter</span>
           </button>
           <button onclick="switchDrawerSubTab('lusha')" id="dtab-btn-lusha" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
-            <span>🤝 Lusha Warm Intro</span>
+            <span>🤝 Warm Intro Contact</span>
           </button>
           <button onclick="switchDrawerSubTab('details')" id="dtab-btn-details" class="dtab-btn px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 smooth-transition flex items-center gap-1.5">
             <span>🎯 Job Overview</span>
@@ -1612,51 +1707,56 @@
       }
     }
 
-    // Render 5 Soothing Pastel Cards
+    // Render 5 Soothing Pastel Cards (Tsenta-inspired refined card tokens)
     function renderPastelMatches() {
       const container = document.getElementById('pastel-matches-grid');
       const C = 103.67;
 
-      container.innerHTML = stagedJobs.map(job => {
+      container.innerHTML = stagedJobs.map((job, idx) => {
         const offset = C - (job.score / 100) * C;
         return `
-          <div class="rounded-2xl border border-[#EAEAEA] bg-white p-1.5 shadow-2xs hover:shadow-xs smooth-transition flex flex-col justify-between">
-            <div class="rounded-xl p-3 flex flex-col justify-between min-h-[140px]" style="background-color: ${job.pastelBg}; border: 1px solid ${job.pastelBorder};">
+          <div class="rounded-2xl border border-[#EAEAEA] bg-white p-2 shadow-2xs hover:shadow-xs hover:border-gray-300 smooth-transition flex flex-col justify-between group">
+            <div class="rounded-xl p-3.5 flex flex-col justify-between min-h-[148px]" style="background-color: ${job.pastelBg}; border: 1px solid ${job.pastelBorder};">
               <div>
-                <div class="flex items-start justify-between gap-1 text-[10.5px] text-gray-500">
-                  <span class="truncate">${job.location.split(',')[0]}</span>
-                  <span class="shrink-0">${job.postedAt}</span>
+                <div class="flex items-center justify-between gap-1 text-[10px] text-gray-500 font-mono">
+                  <span class="font-bold tracking-wider text-gray-600">0${idx + 1} · FIT</span>
+                  <span class="truncate text-[10.5px]">${job.postedAt}</span>
                 </div>
                 
-                <div class="mt-1 flex items-start justify-between gap-2">
+                <div class="mt-1.5 flex items-start justify-between gap-2">
                   <div class="font-semibold text-xs text-gray-900 leading-snug line-clamp-2">${job.title}</div>
                   
                   <!-- Circular Gauge Ring -->
                   <div class="relative h-8 w-8 shrink-0">
                     <svg aria-hidden="true" width="32" height="32" class="-rotate-90">
-                      <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"></circle>
-                      <circle cx="16" cy="16" r="14" fill="none" stroke="#6B7280" stroke-width="2.5" stroke-dasharray="${C}" stroke-dashoffset="${offset}" stroke-linecap="round"></circle>
+                      <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="2.5"></circle>
+                      <circle cx="16" cy="16" r="14" fill="none" stroke="#374151" stroke-width="2.5" stroke-dasharray="${C}" stroke-dashoffset="${offset}" stroke-linecap="round"></circle>
                     </svg>
-                    <span class="absolute inset-0 flex items-center justify-center font-mono text-[9.5px] font-bold text-gray-800">${job.score}</span>
+                    <span class="absolute inset-0 flex items-center justify-center font-mono text-[9px] font-bold text-gray-800">${job.score}</span>
                   </div>
                 </div>
 
                 <!-- Skill Tag Chips -->
-                <div class="flex flex-wrap gap-1 mt-2">
-                  ${job.tags.map(t => `<span class="text-[9.5px] px-1.5 py-0.2 rounded bg-white/70 text-gray-700 border border-black/5">${t}</span>`).join('')}
+                <div class="flex flex-wrap gap-1 mt-2.5">
+                  ${job.tags.map(t => `<span class="text-[9.5px] px-1.5 py-0.5 rounded-md bg-white/80 text-gray-700 border border-black/5 font-medium shadow-2xs">${t}</span>`).join('')}
                 </div>
+              </div>
+
+              <div class="text-[10px] text-gray-500 truncate pt-2">
+                📍 ${job.location.split(',')[0]}
               </div>
             </div>
 
             <!-- Bottom Company Bar & Buttons -->
-            <div class="pt-2 pb-1 px-1.5 flex items-center justify-between gap-1">
+            <div class="pt-2.5 pb-1 px-1.5 flex items-center justify-between gap-1">
               <div class="min-w-0 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full ${job.humanApproved ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
-                <span class="text-[11px] font-medium text-gray-700 truncate">${job.company}</span>
+                <span class="w-1.5 h-1.5 rounded-full ${job.humanApproved ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                <span class="text-[11px] font-semibold text-gray-800 truncate">${job.company}</span>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="openDrawer('${job.id}')" class="h-6 px-3 rounded-full text-[10.5px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 smooth-transition shadow-2xs">
-                  Tailor & Review
+                <button onclick="openDrawer('${job.id}')" class="h-6 px-2.5 rounded-full text-[10.5px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 smooth-transition shadow-2xs flex items-center gap-1">
+                  <span>Tailor</span>
+                  <span class="text-gray-400">›</span>
                 </button>
               </div>
             </div>
@@ -1671,13 +1771,13 @@
       tbody.innerHTML = jobsToRender.map(job => {
         let statusBadge = '';
         if (job.status === 'Needs you') {
-          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#FEF2F2] text-[#991B1B]"><span class="h-1.5 w-1.5 rounded-full bg-[#EF4444]"></span>Needs you</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 font-medium text-[11px] bg-[#FEF2F2] text-[#991B1B] border border-[#FEE2E2]"><span class="h-1.5 w-1.5 rounded-full bg-[#EF4444]"></span>Needs you</span>`;
         } else if (job.status === 'Ready' || job.status === 'Approved / Ready') {
-          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#ECFDF5] text-[#065F46]"><span class="h-1.5 w-1.5 rounded-full bg-[#10B981]"></span>Ready</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 font-medium text-[11px] bg-[#ECFDF5] text-[#065F46] border border-[#DCFCE7]"><span class="h-1.5 w-1.5 rounded-full bg-[#10B981]"></span>Ready</span>`;
         } else if (job.status === 'Outreach Drafted') {
-          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-[#EFF6FF] text-[#1E40AF]"><span class="h-1.5 w-1.5 rounded-full bg-[#3B82F6]"></span>Tailoring</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 font-medium text-[11px] bg-[#EFF6FF] text-[#1E40AF] border border-[#DBEAFE]"><span class="h-1.5 w-1.5 rounded-full bg-[#3B82F6]"></span>Tailoring</span>`;
         } else {
-          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[11px] bg-gray-100 text-gray-700">${job.status}</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 font-medium text-[11px] bg-gray-100 text-gray-700 border border-gray-200">${job.status}</span>`;
         }
 
         return `

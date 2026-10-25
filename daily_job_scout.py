@@ -23,6 +23,7 @@ from pipeline import (
     generate_ats_optimized_resume,
     build_moderncv_latex,
     generate_email_digest_html,
+    sanitize_slug,
     APIFY_TOKEN,
     SUPABASE_URL,
     SUPABASE_KEY
@@ -83,7 +84,7 @@ def run_daily_pipeline(query="AI Product Manager", location="Pune, Maharashtra, 
         latex_code = build_moderncv_latex(ats_text)
 
         # Save files
-        safe_co = "".join(c for c in co if c.isalnum() or c in (' ', '_')).rstrip().replace(" ", "_").lower()
+        safe_co = sanitize_slug(co)
         date_str = datetime.now().strftime("%Y%m%d")
 
         tex_filename = f"resumes/resume_{safe_co}_{date_str}.tex"

@@ -2,9 +2,13 @@ import os
 import re
 import time
 import json
+import logging
 import urllib.parse
 from datetime import datetime, timedelta
 import requests
+
+# Set up module logger
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------
 # Default Credentials & Config
@@ -13,6 +17,19 @@ APIFY_TOKEN = os.getenv("APIFY_API_TOKEN", "")
 APIFY_ACTOR_ID = os.getenv("APIFY_ACTOR_ID", "curious_coder~linkedin-jobs-scraper")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://advkivbiwhwpncyomcei.supabase.co/rest/v1/")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_9hgSwmou0V8xdADTAG-mjw_3fFL3Z_t")
+
+# ---------------------------------------------------------
+# General Utilities
+# ---------------------------------------------------------
+def sanitize_slug(text: str) -> str:
+    """
+    Sanitizes a company name or role title into a clean alphanumeric slug suitable for filenames and URLs.
+    """
+    if not text:
+        return "untitled"
+    cleaned = "".join(c for c in text if c.isalnum() or c in (' ', '_', '-')).strip()
+    slug = re.sub(r'[\s\-]+', '_', cleaned).lower()
+    return slug or "untitled"
 
 # ---------------------------------------------------------
 # 1. LinkedIn Search URL Builder (from n8n 'Build LinkedIn URL')
@@ -28,11 +45,11 @@ def build_linkedin_url(query="AI Product Manager", location="Pune, Maharashtra, 
         "pastWeek": "r604800",
         "pastMonth": "r2592000"
     }
-    tpr = time_map.get(time_filter, "r604800")
+    time_posted_range = time_map.get(time_filter, "r604800")
     encoded_query = urllib.parse.quote(query)
     encoded_location = urllib.parse.quote(location)
 
-    url = f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}&location={encoded_location}&f_TPR={tpr}&sortBy=DD"
+    url = f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}&location={encoded_location}&f_TPR={time_posted_range}&sortBy=DD"
 
     if remote_filter == "remote":
         url += "&f_WT=2"
@@ -42,79 +59,86 @@ def build_linkedin_url(query="AI Product Manager", location="Pune, Maharashtra, 
     return url
 
 # ---------------------------------------------------------
-# 2. Asynchronous Apify Runner & Poller (from n8n 'Apify - Fetch Jobs1')
+# 2. Asynchronous Apify Runner & Poller
 # ---------------------------------------------------------
+def _trigger_apify_run(start_url, payload, headers):
+    """Initiates an asynchronous Apify actor run and returns (run_id, dataset_id, error)."""
+    try:
+        response = requests.post(start_url, json=payload, headers=headers, timeout=30)
+        if response.status_code not in [200, 201]:
+            return None, None, f"Failed to start Apify actor (HTTP {response.status_code}): {response.text[:200]}"
+        run_data = response.json().get("data", {})
+        run_id = run_data.get("id")
+        dataset_id = run_data.get("defaultDatasetId")
+        if not run_id:
+            return None, None, "Apify did not return a valid run ID."
+        return run_id, dataset_id, None
+    except requests.RequestException as err:
+        return None, None, f"Apify start connection error: {err}"
+
+def _poll_apify_run_status(check_url, max_attempts=30, status_callback=None):
+    """Polls Apify run status until SUCCEEDED, failed, or timed out."""
+    attempt = 0
+    while attempt < max_attempts:
+        time.sleep(10)
+        attempt += 1
+        try:
+            status_res = requests.get(check_url, timeout=20)
+            if status_res.status_code == 200:
+                current_status = status_res.json().get("data", {}).get("status", "UNKNOWN")
+                if status_callback:
+                    status_callback(f"⏳ Apify crawler active... Status: {current_status} ({attempt * 10}s elapsed)")
+                if current_status == "SUCCEEDED":
+                    return True, None
+                elif current_status in ["FAILED", "ABORTED", "TIMED-OUT"]:
+                    return False, f"Apify crawler run finished with status: {current_status}"
+            else:
+                if status_callback:
+                    status_callback(f"⚠️ Status check HTTP {status_res.status_code}. Retrying...")
+        except requests.RequestException as err:
+            logger.warning("Network blip while polling Apify run status: %s", err)
+    return False, "Apify scraping timed out after 300 seconds."
+
+def _fetch_apify_dataset_items(dataset_id, token):
+    """Downloads scraped items from Apify dataset."""
+    items_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items?token={token}"
+    try:
+        items_res = requests.get(items_url, timeout=30)
+        if items_res.status_code == 200:
+            return items_res.json(), None
+        return [], f"Failed to fetch dataset items (HTTP {items_res.status_code}): {items_res.text[:200]}"
+    except requests.RequestException as err:
+        return [], f"Failed to download Apify dataset items: {err}"
+
 def run_apify_async(search_url, token=APIFY_TOKEN, actor_id=APIFY_ACTOR_ID, max_items=10, status_callback=None):
     """
     Runs the Apify actor asynchronously and polls until SUCCEEDED.
-    Eliminates HTTP timeout errors from synchronous endpoints.
+    Decomposed into small single-responsibility helper functions.
     """
     headers = {"Content-Type": "application/json"}
     start_url = f"https://api.apify.com/v2/acts/{actor_id}/runs?token={token}"
-
     payload = {
         "urls": [search_url],
         "scrapeCompany": False,
         "count": max_items
     }
 
-    try:
-        if status_callback:
-            status_callback("🚀 Triggering asynchronous Apify run...")
+    if status_callback:
+        status_callback("🚀 Triggering asynchronous Apify run...")
 
-        # 1. Start Actor run
-        res = requests.post(start_url, json=payload, headers=headers, timeout=30)
-        if res.status_code not in [200, 201]:
-            return [], f"Failed to start Apify actor (HTTP {res.status_code}): {res.text[:200]}"
+    run_id, dataset_id, err = _trigger_apify_run(start_url, payload, headers)
+    if err:
+        return [], err
 
-        run_data = res.json().get("data", {})
-        run_id = run_data.get("id")
-        dataset_id = run_data.get("defaultDatasetId")
+    check_url = f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}?token={token}"
+    succeeded, poll_err = _poll_apify_run_status(check_url, max_attempts=30, status_callback=status_callback)
+    if not succeeded:
+        return [], poll_err
 
-        if not run_id:
-            return [], "Apify did not return a valid run ID."
+    if status_callback:
+        status_callback("📥 Crawler succeeded! Downloading dataset items...")
 
-        # 2. Poll status every 10 seconds (max wait: 5 minutes)
-        check_url = f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}?token={token}"
-        max_attempts = 30
-        attempt = 0
-
-        while attempt < max_attempts:
-            time.sleep(10)
-            attempt += 1
-
-            status_res = requests.get(check_url, timeout=20)
-            if status_res.status_code == 200:
-                current_status = status_res.json().get("data", {}).get("status", "UNKNOWN")
-                if status_callback:
-                    status_callback(f"⏳ Apify crawler active... Status: {current_status} ({attempt * 10}s elapsed)")
-
-                if current_status == "SUCCEEDED":
-                    break
-                elif current_status in ["FAILED", "ABORTED", "TIMED-OUT"]:
-                    return [], f"Apify crawler run finished with status: {current_status}"
-            else:
-                if status_callback:
-                    status_callback(f"⚠️ Status check HTTP {status_res.status_code}. Retrying...")
-
-        if attempt >= max_attempts:
-            return [], "Apify scraping timed out after 300 seconds."
-
-        # 3. Fetch items from default dataset
-        if status_callback:
-            status_callback("📥 Crawler succeeded! Downloading dataset items...")
-
-        items_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items?token={token}"
-        items_res = requests.get(items_url, timeout=30)
-
-        if items_res.status_code == 200:
-            raw_items = items_res.json()
-            return raw_items, None
-        else:
-            return [], f"Failed to fetch dataset items (HTTP {items_res.status_code}): {items_res.text[:200]}"
-
-    except Exception as e:
-        return [], f"Apify async connection error: {str(e)}"
+    return _fetch_apify_dataset_items(dataset_id, token)
 
 # ---------------------------------------------------------
 # 3. HTML Stripper & Result Normalizer (from n8n 'Parse Apify Job Results1')
@@ -205,18 +229,18 @@ def find_lusha_decision_maker(company_name, api_key=LUSHA_API_KEY):
             "limit": 1
         }
         try:
-            res = requests.post("https://api.lusha.com/v3/contacts/search", json=payload, headers=headers, timeout=15)
-            if res.status_code == 200:
-                data = res.json()
+            response = requests.post("https://api.lusha.com/v3/contacts/search", json=payload, headers=headers, timeout=15)
+            if response.status_code == 200:
+                data = response.json()
                 contacts = data.get("data") or data.get("contacts") or []
                 if contacts:
-                    top = contacts[0]
-                    name = top.get("fullName") or f"{top.get('firstName', '')} {top.get('lastName', '')}".strip() or "Hiring Manager"
-                    title = top.get("jobTitle") or top.get("title") or "Product / Engineering Lead"
-                    emails = top.get("emails") or []
-                    verified_email = (emails[0].get("email") if emails else top.get("email")) or ""
+                    top_contact = contacts[0]
+                    name = top_contact.get("fullName") or f"{top_contact.get('firstName', '')} {top_contact.get('lastName', '')}".strip() or "Hiring Manager"
+                    title = top_contact.get("jobTitle") or top_contact.get("title") or "Product / Engineering Lead"
+                    emails = top_contact.get("emails") or []
+                    verified_email = (emails[0].get("email") if emails else top_contact.get("email")) or ""
                     confidence = "Lusha Verified · High Confidence" if verified_email else "No Verified Email (Lusha Checked)"
-                    linkedin = top.get("linkedinUrl") or top.get("socialLinks", {}).get("linkedin") or ""
+                    linkedin = top_contact.get("linkedinUrl") or top_contact.get("socialLinks", {}).get("linkedin") or ""
                     return {
                         "name": name,
                         "title": title,
@@ -224,17 +248,19 @@ def find_lusha_decision_maker(company_name, api_key=LUSHA_API_KEY):
                         "confidence": confidence,
                         "linkedin": linkedin
                     }
-        except Exception:
-            pass
+        except requests.RequestException as err:
+            logger.warning("Lusha API request error for '%s': %s", company_name, err)
+        except Exception as err:
+            logger.warning("Unexpected error during Lusha decision maker search: %s", err)
 
     # Intelligent fallback when Lusha API key is placeholder or rate-limited
-    safe_co = re.sub(r'[^a-zA-Z0-9]', '', company_name).lower()
+    safe_slug = sanitize_slug(company_name).replace("_", "")
     return {
-        "name": f"Head of Product",
+        "name": "Head of Product",
         "title": f"Director of Product Engineering @ {company_name}",
-        "email": f"talent@{safe_co}.com",
+        "email": f"talent@{safe_slug}.com",
         "confidence": "Lusha Verified · High Confidence",
-        "linkedin": f"https://www.linkedin.com/company/{safe_co}/people/"
+        "linkedin": f"https://www.linkedin.com/company/{safe_slug}/people/"
     }
 
 # ---------------------------------------------------------
@@ -245,18 +271,18 @@ LEDGER_FILE = os.path.join(os.path.dirname(__file__), "job_ledger.json")
 def load_ledger():
     if os.path.exists(LEDGER_FILE):
         try:
-            with open(LEDGER_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            pass
+            with open(LEDGER_FILE, "r", encoding="utf-8") as file:
+                return json.load(file)
+        except (json.JSONDecodeError, OSError) as err:
+            logger.error("Failed to load ledger from %s: %s", LEDGER_FILE, err)
     return {"seen_urls": {}, "jobs": [], "decisions": []}
 
 def save_ledger(ledger):
     try:
-        with open(LEDGER_FILE, "w") as f:
-            json.dump(ledger, f, indent=2)
-    except Exception as e:
-        print(f"Error saving ledger: {e}")
+        with open(LEDGER_FILE, "w", encoding="utf-8") as file:
+            json.dump(ledger, file, indent=2)
+    except OSError as err:
+        logger.error("Error saving ledger to %s: %s", LEDGER_FILE, err)
 
 def is_job_in_ledger(job_url):
     ledger = load_ledger()
@@ -281,7 +307,7 @@ def record_job_in_ledger(job_data):
         save_ledger(ledger)
 
 # ---------------------------------------------------------
-# 4. Supabase Storage (Strict Insert-Only, apikey Header ONLY)
+# 4. Supabase Storage & Deduplication
 # ---------------------------------------------------------
 def get_supabase_headers(key=SUPABASE_KEY):
     """
@@ -318,6 +344,42 @@ def store_job_in_supabase(job, url=SUPABASE_URL, key=SUPABASE_KEY):
         return success, f"HTTP {res.status_code}: {res.text[:100]}"
     except Exception as e:
         return False, str(e)
+
+def check_supabase_duplicates(jobs, url=SUPABASE_URL, key=SUPABASE_KEY):
+    """
+    Filters out jobs that have already been recorded in Supabase or the local ledger.
+    Matches import contract for app.py and daily_job_scout.py.
+    """
+    seen_urls = set()
+
+    # 1. Check local ledger
+    ledger = load_ledger()
+    seen_urls.update(ledger.get("seen_urls", {}).keys())
+
+    # 2. Check Supabase 'jobs' table if reachable
+    if url and key:
+        try:
+            endpoint = f"{url.rstrip('/')}/jobs?select=url"
+            headers = get_supabase_headers(key)
+            response = requests.get(endpoint, headers=headers, timeout=10)
+            if response.status_code == 200:
+                remote_rows = response.json()
+                for row in remote_rows:
+                    remote_url = row.get("url")
+                    if remote_url:
+                        seen_urls.add(remote_url)
+        except requests.RequestException as exc:
+            logger.warning("Could not reach Supabase for remote deduplication: %s", exc)
+
+    new_jobs = []
+    for job in jobs:
+        link = job.get("jobLink") or job.get("url") or ""
+        if link and link not in seen_urls:
+            new_jobs.append(job)
+            seen_urls.add(link)
+        elif not link:
+            new_jobs.append(job)
+    return new_jobs
 
 
 # ---------------------------------------------------------
@@ -371,8 +433,8 @@ def generate_ats_optimized_resume(current_resume_text, job_description, target_r
             response = model.generate_content(prompt)
             if response and response.text:
                 return response.text.strip(), None
-        except Exception as e:
-            pass  # Fallback to local heuristic engine
+        except Exception as err:
+            logger.warning("Gemini ATS resume generation failed, falling back to heuristic engine: %s", err)
 
     # Local Heuristic ATS Optimizer
     # Extract keywords from JD
@@ -455,22 +517,22 @@ def build_experience_latex(text):
         if "|" in trimmed and not trimmed.startswith("-") and len(current) > 0:
             blocks.append(current)
             current = []
-        current.push(trimmed) if hasattr(current, 'push') else current.append(trimmed)
+        current.append(trimmed)
     if current:
         blocks.append(current)
 
     out = ""
     for block in blocks:
-        co, loc = (block[0].split("|") + [""])[:2]
+        company_name, location = (block[0].split("|") + [""])[:2]
         title, dates = (block[1].split("|") + [""])[:2] if len(block) > 1 else ("", "")
-        bullets = [b for b in block[2:] if b.startswith("- ")]
+        bullets = [bullet for bullet in block[2:] if bullet.startswith("- ")]
 
-        out += f"\n\\cventry{{{latex_escape(dates.strip())}}}{{{latex_escape(title.strip())}}}{{{latex_escape(co.strip())}}}{{{latex_escape(loc.strip())}}}{{}}{{\n"
+        out += f"\n\\cventry{{{latex_escape(dates.strip())}}}{{{latex_escape(title.strip())}}}{{{latex_escape(company_name.strip())}}}{{{latex_escape(location.strip())}}}{{}}{{\n"
         if bullets:
             out += "  \\begin{itemize}\n"
-            for b in bullets:
-                clean_b = re.sub(r'^-\s+', '', b)
-                out += f"    \\item {latex_escape(clean_b)}\n"
+            for bullet in bullets:
+                clean_bullet = re.sub(r'^-\s+', '', bullet)
+                out += f"    \\item {latex_escape(clean_bullet)}\n"
             out += "  \\end{itemize}\n"
         out += "}\n"
     return out or r"\cvitem{}{}"
@@ -478,23 +540,23 @@ def build_experience_latex(text):
 def build_education_latex(text):
     if not text:
         return r"\cvitem{}{}"
-    lines = [l.strip() for l in text.split("\n") if l.strip() and not l.strip().startswith("-")]
+    lines = [line.strip() for line in text.split("\n") if line.strip() and not line.strip().startswith("-")]
     out = ""
     for i in range(0, len(lines) - 1, 2):
-        school, loc = (lines[i].split("|") + [""])[:2]
+        school, location = (lines[i].split("|") + [""])[:2]
         degree, dates = (lines[i+1].split("|") + [""])[:2]
-        out += f"\\cventry{{{latex_escape(dates.strip())}}}{{{latex_escape(degree.strip())}}}{{{latex_escape(school.strip())}}}{{{latex_escape(loc.strip())}}}{{}}{{}}\n"
+        out += f"\\cventry{{{latex_escape(dates.strip())}}}{{{latex_escape(degree.strip())}}}{{{latex_escape(school.strip())}}}{{{latex_escape(location.strip())}}}{{}}{{}}\n"
     return out or r"\cvitem{}{}"
 
 def build_skills_latex(text):
     if not text:
         return r"\cvitem{}{}"
-    lines = [l.strip().lstrip("- ") for l in text.split("\n") if l.strip()]
+    lines = [line.strip().lstrip("- ") for line in text.split("\n") if line.strip()]
     out = []
     for line in lines:
         if ":" in line:
-            cat, items = line.split(":", 1)
-            out.append(f"\\cvitem{{{latex_escape(cat.strip())}}}{{{latex_escape(items.strip())}}}")
+            category, items = line.split(":", 1)
+            out.append(f"\\cvitem{{{latex_escape(category.strip())}}}{{{latex_escape(items.strip())}}}")
         else:
             out.append(f"\\cvitem{{}}{{{latex_escape(line)}}}")
     return "\n".join(out)
@@ -583,12 +645,12 @@ def generate_email_digest_html(processed_jobs, user_name="Swapnil"):
     </thead>
     <tbody>
 """
-    for it in processed_jobs:
+    for job in processed_jobs:
         html += f"""      <tr>
-        <td style="padding:10px;border-bottom:1px solid #eee;font-weight:700;">{it.get('company')}</td>
-        <td style="padding:10px;border-bottom:1px solid #eee;">{it.get('title')}</td>
-        <td style="padding:10px;border-bottom:1px solid #eee;">{it.get('postedAt', today)}</td>
-        <td style="padding:10px;border-bottom:1px solid #eee;"><a href="{it.get('jobLink', '#')}" style="color:#1a73e8;">🔗 View Job</a></td>
+        <td style="padding:10px;border-bottom:1px solid #eee;font-weight:700;">{job.get('company')}</td>
+        <td style="padding:10px;border-bottom:1px solid #eee;">{job.get('title')}</td>
+        <td style="padding:10px;border-bottom:1px solid #eee;">{job.get('postedAt', today)}</td>
+        <td style="padding:10px;border-bottom:1px solid #eee;"><a href="{job.get('jobLink', '#')}" style="color:#1a73e8;">🔗 View Job</a></td>
         <td style="padding:10px;border-bottom:1px solid #eee;"><span style="color:#0f9d58;font-weight:600;">✓ ATS Tailored</span></td>
       </tr>
 """
