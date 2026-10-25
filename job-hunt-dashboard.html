@@ -670,6 +670,32 @@
   </main>
 
   <!-- ======================================================== -->
+  <!-- FOOTER WITH GOOGLE COLOR PALETTE LINE & COPYRIGHT -->
+  <!-- ======================================================== -->
+  <footer class="mt-auto bg-white border-t border-[#EAEAEA]">
+    <!-- Google Color Palette Stripe Line (Blue, Red, Yellow, Green) -->
+    <div class="w-full flex h-1">
+      <div class="flex-1 bg-[#4285F4]"></div>
+      <div class="flex-1 bg-[#EA4335]"></div>
+      <div class="flex-1 bg-[#FBBC05]"></div>
+      <div class="flex-1 bg-[#34A853]"></div>
+    </div>
+
+    <!-- Footer Content -->
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-gray-100 border border-gray-300 text-[10px] font-bold text-gray-800 shadow-2xs">JS</span>
+        <span class="font-semibold text-gray-900">Job Scout Agent</span>
+        <span class="text-gray-300">•</span>
+        <span class="text-gray-500 font-mono text-[11px]">Autonomous Career Suite</span>
+      </div>
+      <div class="text-center sm:text-right text-[11.5px] text-gray-600 font-sans">
+        &copy; Copy Rights Reserved 2026- <span class="font-bold italic text-gray-900">Practical AI Team</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================== -->
   <!-- ROLE INSPECTION & HUMAN-IN-THE-LOOP TAILORING DRAWER -->
   <!-- ======================================================== -->
   <div id="role-drawer" class="fixed inset-0 z-50 hidden flex items-center justify-end">
@@ -985,7 +1011,7 @@
             JS
           </span>
           <div>
-            <h3 id="auth-modal-title" class="font-bold text-gray-900 text-sm">Sign in to Job Scout Agent</h3>
+            <h3 id="auth-modal-title" class="font-bold text-gray-900 text-sm">Sign Up for Job Scout Agent</h3>
             <p id="auth-modal-subtitle" class="text-xs text-gray-500">Autonomous LinkedIn career search & ATS tailoring</p>
           </div>
         </div>
@@ -994,13 +1020,13 @@
         </button>
       </div>
 
-      <!-- Mode Switcher Tabs -->
+      <!-- Mode Switcher Tabs (Sign In & Sign Up) -->
       <div class="flex rounded-xl bg-gray-100 p-1 text-xs">
-        <button onclick="toggleAuthMode('signin')" id="auth-tab-signin" class="flex-1 py-1.5 rounded-lg font-medium bg-white text-gray-900 shadow-2xs smooth-transition">
+        <button onclick="toggleAuthMode('signin')" id="auth-tab-signin" class="flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition">
           Sign In
         </button>
-        <button onclick="toggleAuthMode('signup')" id="auth-tab-signup" class="flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition">
-          Create Account
+        <button onclick="toggleAuthMode('signup')" id="auth-tab-signup" class="flex-1 py-1.5 rounded-lg font-medium bg-white text-gray-900 shadow-2xs smooth-transition">
+          Sign Up
         </button>
       </div>
 
@@ -1075,7 +1101,7 @@
           id="auth-submit-btn" 
           class="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 font-medium text-xs smooth-transition shadow-2xs mt-2"
         >
-          Sign In
+          Sign Up
         </button>
       </form>
 
@@ -1224,8 +1250,8 @@
         tabSignin.className = "flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 smooth-transition";
         nameGroup.classList.remove('hidden');
         forgotLink.classList.add('hidden');
-        submitBtn.innerText = "Create Account";
-        title.innerText = "Create your Job Scout account";
+        submitBtn.innerText = "Sign Up";
+        title.innerText = "Sign Up for Job Scout Agent";
         subtitle.innerText = "Sync your master resume and track applications seamlessly";
         btnGoogle.innerText = "Sign up with Google";
         btnGithub.innerText = "Sign up with GitHub";
