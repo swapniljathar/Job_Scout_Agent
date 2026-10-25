@@ -672,17 +672,19 @@
   <!-- ======================================================== -->
   <!-- FOOTER WITH GOOGLE COLOR PALETTE LINE & COPYRIGHT -->
   <!-- ======================================================== -->
-  <footer class="mt-auto bg-white border-t border-[#EAEAEA]">
-    <!-- Google Color Palette Stripe Line (Blue, Red, Yellow, Green) -->
-    <div class="w-full flex h-1 gap-2 px-1">
-      <div class="flex-1 bg-[#4285F4] rounded-full"></div>
-      <div class="flex-1 bg-[#EA4335] rounded-full"></div>
-      <div class="flex-1 bg-[#FBBC05] rounded-full"></div>
-      <div class="flex-1 bg-[#34A853] rounded-full"></div>
+  <footer class="mt-auto bg-white border-t border-[#EAEAEA] pt-6 pb-6">
+    <!-- Google Color Palette Stripe Line (with space on left & right, and between lines) -->
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 mb-5">
+      <div class="flex h-1 gap-2.5">
+        <div class="flex-1 bg-[#4285F4] rounded-full"></div>
+        <div class="flex-1 bg-[#EA4335] rounded-full"></div>
+        <div class="flex-1 bg-[#FBBC05] rounded-full"></div>
+        <div class="flex-1 bg-[#34A853] rounded-full"></div>
+      </div>
     </div>
 
     <!-- Footer Content -->
-    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
       <div class="flex items-center gap-2">
         <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-gray-100 border border-gray-300 text-[10px] font-bold text-gray-800 shadow-2xs">JS</span>
         <span class="font-semibold text-gray-900">Job Scout Agent</span>
@@ -1276,35 +1278,47 @@
     }
 
     async function handleOAuthLogin(provider) {
-      showToast(`Connecting to ${provider.toUpperCase()} Authentication…`);
+      showToast(`Connecting to ${provider.toUpperCase()}…`);
       
+      let redirectUrl = null;
       if (supabaseClient) {
         try {
           const { data, error } = await supabaseClient.auth.signInWithOAuth({
             provider: provider,
             options: {
-              redirectTo: window.location.href
+              redirectTo: window.location.origin + window.location.pathname,
+              skipBrowserRedirect: true
             }
           });
-          if (error) console.warn("Supabase OAuth note:", error.message);
+          if (error) {
+            console.warn(`Supabase ${provider} provider not enabled:`, error.message);
+          } else if (data && data.url) {
+            redirectUrl = data.url;
+          }
         } catch (err) {
-          console.warn("Supabase OAuth redirect:", err);
+          console.warn("Supabase OAuth call:", err);
         }
       }
 
-      // Fast, smooth instant login for current session:
+      // If provider redirect URL exists and is valid, navigate to real OAuth
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // If provider is not enabled in Supabase, activate demo session smoothly without 400 error
       setTimeout(() => {
         currentUser = {
-          name: provider === 'google' ? "Swapnil Jathar" : provider === 'github' ? "swapnil-dev" : "Swapnil Jathar (LinkedIn)",
-          email: provider === 'google' ? "candidate@example.com" : `swapnil@${provider}.com`,
+          name: "Swapnil Jathar",
+          email: provider === 'google' ? "swapnil.jathar@gmail.com" : provider === 'github' ? "swapnil-dev" : "swapnil@linkedin.com",
           role: "APM",
           provider: provider.charAt(0).toUpperCase() + provider.slice(1)
         };
         localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
         renderAuthHeader();
         closeAuthModal();
-        showToast(`Signed in successfully via ${provider.toUpperCase()}!`);
-      }, 600);
+        showToast(`Signed in via ${currentUser.provider} (Demo Profile)`);
+      }, 400);
     }
 
     async function handleEmailAuth(event) {
@@ -1320,12 +1334,18 @@
       if (supabaseClient) {
         try {
           if (currentAuthMode === 'signup') {
-            await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
+            const { data, error } = await supabaseClient.auth.signUp({
+              email,
+              password,
+              options: { data: { full_name: name } }
+            });
+            if (error) console.warn("Supabase email signup:", error.message);
           } else {
-            await supabaseClient.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) console.warn("Supabase email signin:", error.message);
           }
         } catch (err) {
-          console.warn("Supabase email auth notice:", err);
+          console.warn("Supabase auth exception:", err);
         }
       }
 
@@ -1340,7 +1360,7 @@
         renderAuthHeader();
         closeAuthModal();
         showToast(currentAuthMode === 'signup' ? `Welcome, ${name}! Account created.` : `Welcome back, ${name}!`);
-      }, 500);
+      }, 400);
     }
 
     function handleForgotPassword(event) {
