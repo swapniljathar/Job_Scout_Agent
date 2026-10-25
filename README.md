@@ -11,6 +11,18 @@
 
 ---
 
+## 💡 About
+
+**Job Scout Agent** bridges the gap between generic spray-and-pray applications and exhausting manual tailoring. It acts as an autonomous personal career co-pilot—discovering relevant opportunities, calculating ATS alignment, and drafting tailored application assets while keeping **you firmly in control**.
+
+### Core Pillars
+- **🎯 Precision Fit over Volume**: Evaluates roles using multi-dimensional scoring (Title Alignment, Skills Match, Seniority) so you only spend time on high-yield opportunities ($\ge 80\%$).
+- **✍️ Human-in-the-Loop Tailoring**: Generates job-specific resume bullets and cover letters with an interactive editor to inspect, refine, and approve before applying.
+- **⚡ Recruiter Intelligence**: Surfaces hiring managers and generates personalized, high-converting LinkedIn connection notes and outreach drafts.
+- **🔒 Privacy by Design**: Master resumes, personal contact details, and application records remain 100% on your local machine.
+
+---
+
 ## 🗺️ Complete Website & Application Map
 
 The Job Scout Agent interface is designed with a soothing, distraction-free neutral aesthetic (soft whites, light greys, pastel accent cards) and an intuitive, tabbed architecture with an interactive slide-over review drawer.
