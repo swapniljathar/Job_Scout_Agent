@@ -71,23 +71,7 @@ flowchart TD
 
 ---
 
-### 2. Comprehensive Screen & Component Directory
-
-| View / Component | Route / ID | Key Purpose | Primary Actions & Controls |
-| :--- | :--- | :--- | :--- |
-| **Global Header** | `<header>` | Persistent app navigation, session status, user state | • View switch buttons<br>• `Run Scout Cycle` crawler trigger<br>• Profile / Auth modal launcher |
-| **1. Dashboard** | `#tab-dashboard` | Mission control center showing daily match metrics and top opportunities | • Metric counters (Matches, High Fit $\ge 85\%$, Staged, Applied)<br>• 5 Pastel Highlight Cards with radial gauge rings<br>• Staged applications quick review list<br>• One-click batch approval |
-| **2. Browse Roles** | `#tab-browse` | Deep exploration of all ingested job postings | • Live search query filter<br>• Location & minimum score slider<br>• Sort by Match Score, Date, or Company<br>• Job card actions: *Review & Tailor*, *Apply Direct*, *Skip* |
-| **3. Applications** | `#tab-applications` | Structured database ledger tracking every application | • Filterable table (Staged, Applied, Interview, Offer, Rejected)<br>• Direct links to generated resume files<br>• Status transition dropdowns<br>• Date applied and notes logger |
-| **4. Pipeline Tracker** | `#tab-tracker` | Visual multi-stage Kanban workflow of your active pipeline | • Columns: *Discovered* ➔ *Staged* ➔ *Applied* ➔ *Interview* ➔ *Offer*<br>• Card movement across columns<br>• Urgent deadline tags and follow-up indicators |
-| **5. Outreach Inbox** | `#tab-inbox` | Recruiter contact database and messaging studio | • Contact cards with verified email, title, and LinkedIn<br>• One-click tailored LinkedIn connection note generator<br>• Cold email outreach copy button<br>• Post-interview follow-up drafter |
-| **6. Master Resume Hub** | `#tab-resume` | Core profile management and benchmark skills editor | • Multi-format resume uploader (`.pdf`, `.docx`, `.md`, `.txt`)<br>• In-browser Markdown resume editor with live word count<br>• Skills & competencies tag manager<br>• *Save & Trigger Re-Score* across all active jobs |
-| **Review Slide-Over Drawer** | `#role-drawer` | **Human-in-the-Loop** inspection and tailoring hub | • Drawer Sub-tabs (`Resume`, `Cover Letter`, `Recruiter Intel`, `Job Details`)<br>• In-line text editor for tailored resume bullets<br>• In-line cover letter editor<br>• Formats: Download `.md`, `.txt`, `.tex`, `.pdf`<br>• `Approve & Mark Applied` button |
-| **Auth & Profile Modal** | `#auth-modal` | User sign-in, registration, and session control | • Google, GitHub, and LinkedIn OAuth sign-in<br>• Custom email & password registration and login<br>• Instant Demo/Guest account login<br>• Password recovery modal |
-
----
-
-### 3. Core User Journeys
+### 2. Core User Journeys
 
 #### A. Role Discovery & Autonomous Scoring
 1. **Scout Ingestion**: The system queries LinkedIn via Apify (`curious_coder/linkedin-jobs-scraper`) or loads the cached offline feed.
@@ -115,22 +99,6 @@ flowchart TD
 1. Navigate to **Master Resume Hub** (`#tab-resume`).
 2. Upload a new resume or edit your Markdown in the editor.
 3. Click **Save & Re-Score All Roles**: The agent recalculates ATS fit scores for every active listing immediately.
-
----
-
-## 🛠️ Dual-Interface System Architecture
-
-Job Scout Agent provides two complementary interfaces:
-
-1. **Modern Single-Page Application (SPA)** (`server.py` + `job-hunt-dashboard.html`):
-   - Fast, zero-dependency Python HTTP server (`http://localhost:8080`).
-   - Tailwind CSS design system with soothing light-grey/white tones.
-   - Client-side state persistence in `localStorage` with optional Supabase Cloud sync.
-   - Interactive slide-over drawers, modals, and recruiter contact cards.
-
-2. **Streamlit Analytics Dashboard** (`app.py`):
-   - Multi-tab Python data science application (`http://localhost:8501`).
-   - Deep inspection of raw scraped JSON schemas, scoring formula weight adjustments, and direct LaTeX resume compilation.
 
 ---
 
