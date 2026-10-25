@@ -1124,12 +1124,11 @@
       console.warn("Supabase client init:", e);
     }
 
-    let currentAuthMode = 'signin'; // 'signin' or 'signup'
+    let currentAuthMode = 'signup'; // default to 'signup' to start flow from the beginning
     
-    // Default active user (pre-authenticated for instant smooth UX)
     const DEFAULT_USER = {
       name: "Swapnil Jathar",
-      email: "candidate@example.com",
+      email: "swapnil.jathar@example.com",
       role: "APM",
       provider: "Google"
     };
@@ -1137,18 +1136,39 @@
     let currentUser = null;
 
     function initAuth() {
+      // Check stored user session; clear placeholder demo so user starts flow from Sign Up
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFresh = urlParams.get('signup') === 'true' || urlParams.get('fresh') === 'true';
       const stored = localStorage.getItem("job_scout_current_user");
-      if (stored) {
+
+      if (isFresh) {
+        localStorage.removeItem("job_scout_current_user");
+        currentUser = null;
+      } else if (stored) {
         try {
-          currentUser = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          // If stored session is the old auto-logged placeholder, reset to start from Sign Up
+          if (parsed && (parsed.email === "candidate@example.com" || parsed.isPlaceholder)) {
+            localStorage.removeItem("job_scout_current_user");
+            currentUser = null;
+          } else {
+            currentUser = parsed;
+          }
         } catch (e) {
-          currentUser = DEFAULT_USER;
+          currentUser = null;
         }
       } else {
-        currentUser = DEFAULT_USER;
-        localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
+        currentUser = null;
       }
+
       renderAuthHeader();
+
+      // Automatically launch the Sign Up flow if no user is signed in
+      if (!currentUser) {
+        setTimeout(() => {
+          openAuthModal('signup');
+        }, 150);
+      }
 
       // Listen to click outside dropdown
       document.addEventListener('click', (e) => {
@@ -1315,7 +1335,12 @@
     }
 
     function loginAsDemoUser() {
-      currentUser = DEFAULT_USER;
+      currentUser = {
+        name: "Swapnil Jathar",
+        email: "swapnil.jathar@example.com",
+        role: "APM",
+        provider: "Google"
+      };
       localStorage.setItem("job_scout_current_user", JSON.stringify(currentUser));
       renderAuthHeader();
       closeAuthModal();
@@ -1328,7 +1353,8 @@
       renderAuthHeader();
       const menu = document.getElementById('user-dropdown-menu');
       if (menu) menu.classList.add('hidden');
-      showToast("Signed out successfully.");
+      showToast("Signed out. Starting flow from Sign Up.");
+      openAuthModal('signup');
     }
 
     // ==========================================
